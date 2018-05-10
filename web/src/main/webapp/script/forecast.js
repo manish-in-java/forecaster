@@ -11,14 +11,13 @@
       }
       , methods : {
         forecast : function() {
-          var chart = $("#chart");
           var form = $("#form");
           var forecastingModel = $("#forecastingModel");
           var sampleData = $("#sampleData");
           var trigger = $("#trigger");
 
           // Hide error message, if visible.
-          content.error = true;
+          content.error = false;
 
           // Start animation to indicate that the data is being loaded.
           trigger.addClass("loading");
@@ -39,11 +38,46 @@
               // Display an error message.
               content.error = true;
             }
-            , success : function(data) {
+            , success : function(response) {
               // Stop animation.
               trigger.removeClass("loading");
 
-              console.log(data);
+              // Extract samples from the response.
+              var observations = new Array();
+              for(var i = 0; i < response.sample.length; ++i) {
+                observations.push(response.sample[i].value);
+              }
+
+              // Extract predictions from the response.
+              var options = new Array();
+              var predictions = new Array();
+              for(var i = 0; i < response.forecast.length; ++i) {
+                options.push(i + 1);
+
+                predictions.push(response.forecast[i].defined ? response.forecast[i].value : NaN);
+              }
+
+              // Display a line chart with the sample data.
+              new Chart($("#chart")
+              , {
+                "data"        : {
+                  "datasets"  : [{
+                    "borderColor"   : "rgb(255, 99, 132)"
+                    , "data"        : observations
+                    , "fill"        : false
+                    , "lineTension" : 0.1
+                    , "label"       : "Sample"
+                  }, {
+                    "borderColor"   : "rgb(75, 192, 192)"
+                    , "data"        : predictions
+                    , "fill"        : false
+                    , "lineTension" : 0.1
+                    , "label"       : "Forecast"
+                  }]
+                  , "labels"  : options
+                }
+                , "type"      : "line"
+              });
             }
           });
         }
