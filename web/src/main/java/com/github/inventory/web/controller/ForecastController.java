@@ -43,9 +43,11 @@ public class ForecastController
    */
   @PostMapping
   @ResponseBody
-  public Forecast forecast(final ForecastingModelEnum forecastingModel, final String data, final Model model)
+  public SampleAndForecast forecast(final ForecastingModelEnum forecastingModel, final String sampleData, final Model model)
   {
-    return forecastingModel.getModel().forecast(getSample(data));
+    final Sample sample = getSample(sampleData);
+
+    return new SampleAndForecast(sample, forecastingModel.getModel().forecast(sample));
   }
 
   /**
@@ -66,7 +68,7 @@ public class ForecastController
    */
   private Sample getSample(final String data)
   {
-    final String[] dataPoints = data != null ? data.split(",; |") : new String[0];
+    final String[] dataPoints = data != null ? data.split(",|;| |\\|") : new String[0];
 
     return Arrays.stream(dataPoints)
                  .filter(dataPoint -> dataPoint != null && !"".equals(dataPoint.trim()))
@@ -105,6 +107,47 @@ public class ForecastController
     ForecastingModel getModel()
     {
       return model;
+    }
+  }
+
+  /**
+   * A container for sample and forecast data.
+   */
+  private class SampleAndForecast
+  {
+    private final Forecast forecast;
+    private final Sample   sample;
+
+    /**
+     * Sets the sample and its corresponding forecast data.
+     *
+     * @param sample   A {@link Sample}.
+     * @param forecast A {@link Forecast}.
+     */
+    private SampleAndForecast(final Sample sample, final Forecast forecast)
+    {
+      this.forecast = forecast;
+      this.sample = sample;
+    }
+
+    /**
+     * Gets a forecast.
+     *
+     * @return A {@link Forecast}.
+     */
+    public Forecast getForecast()
+    {
+      return forecast;
+    }
+
+    /**
+     * Gets the sample data.
+     *
+     * @return A {@link Sample}.
+     */
+    public Sample getSample()
+    {
+      return sample;
     }
   }
 }

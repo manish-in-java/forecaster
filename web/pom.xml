@@ -49,6 +49,12 @@
     </dependency>
 
     <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <version>${jackson.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>de.neuland-bfi</groupId>
       <artifactId>spring-jade4j</artifactId>
       <version>${jade4j.version}</version>
@@ -79,6 +85,7 @@
   </dependencies>
 
   <properties>
+    <jackson.version>2.9.5</jackson.version>
     <jade4j.version>1.2.7</jade4j.version>
     <java.servlet.version>3.1.0</java.servlet.version>
     <spring.version>5.0.5.RELEASE</spring.version>
