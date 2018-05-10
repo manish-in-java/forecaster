@@ -53,4 +53,19 @@ public class Sample
   {
     super(size);
   }
+
+  /**
+   * Constructs a sample containing the elements of the specified
+   * collection, in the order they are returned by the collection's
+   * iterator.
+   *
+   * @param c The collection whose elements are to be placed into this
+   *          sample.
+   * @throws NullPointerException if the specified collection is
+   *                              {@literal null}.
+   */
+  public Sample(Collection<? extends Observation> c)
+  {
+    super(c);
+  }
 }
