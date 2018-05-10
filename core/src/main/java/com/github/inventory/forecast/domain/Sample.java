@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.github.forecast.domain;
+package com.github.inventory.forecast.domain;
 
 import java.util.Collection;
 import java.util.List;

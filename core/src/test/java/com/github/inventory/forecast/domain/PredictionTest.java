@@ -12,7 +12,7 @@
  * limitations under the License.
  */
 
-package com.github.forecast.domain;
+package com.github.inventory.forecast.domain;
 
 import com.github.UnitTest;
 import org.junit.Test;

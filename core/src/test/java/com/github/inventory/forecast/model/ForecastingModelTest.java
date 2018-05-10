@@ -12,10 +12,10 @@
  * limitations under the License.
  */
 
-package com.github.forecast.model;
+package com.github.inventory.forecast.model;
 
 import com.github.UnitTest;
-import com.github.forecast.domain.Sample;
+import com.github.inventory.forecast.domain.Sample;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;

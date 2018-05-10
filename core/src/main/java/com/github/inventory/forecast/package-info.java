@@ -42,4 +42,4 @@
  * forecasting models.
  * </p>
  */
-package com.github.forecast;
+package com.github.inventory.forecast;

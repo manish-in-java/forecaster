@@ -12,12 +12,12 @@
  * limitations under the License.
  */
 
-package com.github.forecast.model;
+package com.github.inventory.forecast.model;
 
-import com.github.forecast.domain.Forecast;
-import com.github.forecast.domain.Observation;
-import com.github.forecast.domain.Prediction;
-import com.github.forecast.domain.Sample;
+import com.github.inventory.forecast.domain.Forecast;
+import com.github.inventory.forecast.domain.Observation;
+import com.github.inventory.forecast.domain.Prediction;
+import com.github.inventory.forecast.domain.Sample;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

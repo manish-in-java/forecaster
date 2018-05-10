@@ -12,7 +12,23 @@
  * limitations under the License.
  */
 
+package com.github.inventory.web.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+
 /**
- * Provides classes and interfaces for generating forecasts.
+ * Home page controller.
  */
-package com.github.forecast.domain;
+@Controller
+public class HomeController
+{
+  /**
+   * Displays the home page.
+   */
+  @GetMapping("/")
+  public String show()
+  {
+    return "home";
+  }
+}

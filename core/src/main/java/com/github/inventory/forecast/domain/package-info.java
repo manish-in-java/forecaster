@@ -13,6 +13,6 @@
  */
 
 /**
- * Provides various forecasting models.
+ * Provides classes and interfaces for generating forecasts.
  */
-package com.github.forecast.model;
+package com.github.inventory.forecast.domain;
