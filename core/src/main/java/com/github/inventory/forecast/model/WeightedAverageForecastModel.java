@@ -88,11 +88,6 @@ public class WeightedAverageForecastModel extends ForecastModel
    * over groups of four observations at a time.
    * </p>
    * <p>
-   * Weights should be provided in descending order of precedence. This means
-   * the first weight will be assigned to the most recent observation, the
-   * second weight to the immediately preceding observation, and so on.
-   * </p>
-   * <p>
    * The number of weights affects the number of predictions that can be made
    * for a given sample of observations. For example, if five weights are used
    * to attempt a forecast on a sample of two observations, no predictions can
@@ -105,6 +100,14 @@ public class WeightedAverageForecastModel extends ForecastModel
    * adding up to {@literal one (1)}, the same restriction is not applicable
    * here. The assigned weights are automatically flattened out in the ratio
    * determined by the individual weights.
+   * </p>
+   * <p>
+   * Weights should be provided in descending order of precedence. This means
+   * the first weight will be assigned to the most recent observation, the
+   * second weight to the immediately preceding observation, and so on. For
+   * example, to assign the weight {@literal 2} to the most recent observation
+   * and {@literal 1} to each of the previous two observations, the weights
+   * should be set as {@literal [2, 1, 1]}.
    * </p>
    *
    * @param weights The weights to use for computing the weighted average
@@ -122,11 +125,64 @@ public class WeightedAverageForecastModel extends ForecastModel
    * {@inheritDoc}
    */
   @Override
-  Forecast generateForecast(final Sample sample, final int predictions)
+  Forecast generateForecast(final Sample sample, final int projections)
   {
-    final List<Double> forecast = new ArrayList<>(sample.size() + predictions);
+    final int observations = sample.size();
 
-    // Skip
+    final List<Double> forecast = new ArrayList<>(observations + projections);
+
+    // Generate predictions for the observed values.
+    for (int i = 0; i < observations; ++i)
+    {
+      if (i < weights.length - 1)
+      {
+        // If there aren't enough observations to weigh, ignore the observed
+        // value.
+        forecast.add(0d);
+
+        continue;
+      }
+
+      // Generate a prediction as the weighted average of the current and
+      // preceding observed values.
+      double prediction = 0;
+      for (int j = 0; j < weights.length; ++j)
+      {
+        prediction += weights[j] * sample.get(i - j);
+      }
+
+      forecast.add(prediction);
+    }
+
+    // Generate predictions beyond the observed values.
+    for (int k = 0; k < projections; ++k)
+    {
+      if (k + observations < weights.length)
+      {
+        // If there aren't enough observations to weigh, ignore the observed
+        // value.
+        forecast.add(0d);
+
+        continue;
+      }
+
+      // Generate a prediction as the weighted average of the current and
+      // preceding observed values.
+      double prediction = 0;
+      for (int l = 0; l < weights.length; ++l)
+      {
+        prediction += weights[l] * (k - l < 0
+                                    // As long as observed values can be
+                                    // pulled from the sample, keep pulling
+                                    // them.
+                                    ? sample.get(observations + k - l - 1)
+                                    // When there are no more observed values
+                                    // in the sample, use past predictions.
+                                    : forecast.get(k - l));
+      }
+
+      forecast.add(prediction);
+    }
 
     return createForecast(sample, forecast);
   }

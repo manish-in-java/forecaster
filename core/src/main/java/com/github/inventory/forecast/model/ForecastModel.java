@@ -43,22 +43,26 @@ public abstract class ForecastModel
    *
    * @param sample      The sample based on which the forecast should be
    *                    generated.
-   * @param predictions The number of predictions to generate from the sample.
-   *                    The actual number of predictions generated and included
-   *                    in the forecast depends on the actual forecast model
-   *                    used. If the specified number of predictions is
-   *                    negative, it is forcibly reset to {@literal zero}.
+   * @param projections The number of predictions to generate from the sample
+   *                    beyond the observations already included in the sample.
+   *                    If negative, is forcibly reset to {@literal zero}.
+   *                    For example, if {@code sample} contains {@literal 10}
+   *                    observations, and {@code projections} is specified as
+   *                    {@literal 4}, the generated forecast will contain a
+   *                    total of {@literal 14} predictions; one each for the
+   *                    {@literal 10} observations in the sample, and
+   *                    {@literal 4} additional beyond the sample set.
    * @return A {@link Forecast}, if {@code sample} is not {@literal null} or
    * empty, {@literal null} otherwise.
    */
-  public Forecast forecast(final Sample sample, final int predictions)
+  public Forecast forecast(final Sample sample, final int projections)
   {
     if (sample == null || sample.isEmpty())
     {
       return null;
     }
 
-    return generateForecast(sample, Math.max(0, predictions));
+    return generateForecast(sample, Math.max(0, projections));
   }
 
   /**
@@ -76,9 +80,18 @@ public abstract class ForecastModel
   /**
    * Generates a forecast based on a sample.
    *
-   * @param sample      The sample based on which the forecast should be generated.
-   * @param predictions The number of predictions to generate from the sample.
+   * @param sample      The sample based on which the forecast should be
+   *                    generated.
+   * @param projections The number of predictions to generate from the sample
+   *                    beyond the observations already included in the sample.
+   *                    If negative, is forcibly reset to {@literal zero}.
+   *                    For example, if {@code sample} contains {@literal 10}
+   *                    observations, and {@code projections} is specified as
+   *                    {@literal 4}, the generated forecast will contain a
+   *                    total of {@literal 14} predictions; one each for the
+   *                    {@literal 10} observations in the sample, and
+   *                    {@literal 4} additional beyond the sample set.
    * @return A {@link Forecast}.
    */
-  abstract Forecast generateForecast(final Sample sample, final int predictions);
+  abstract Forecast generateForecast(final Sample sample, final int projections);
 }

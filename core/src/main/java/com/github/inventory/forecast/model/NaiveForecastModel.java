@@ -47,9 +47,9 @@ public class NaiveForecastModel extends ForecastModel
    * {@inheritDoc}
    */
   @Override
-  Forecast generateForecast(final Sample sample, final int predictions)
+  Forecast generateForecast(final Sample sample, final int projections)
   {
-    final List<Double> forecast = new ArrayList<>(sample.size() + predictions);
+    final List<Double> forecast = new ArrayList<>(sample.size() + projections);
 
     // Add an undefined prediction corresponding to the first observation
     // in the sample, as there is no precedent for the first observation.
@@ -67,7 +67,7 @@ public class NaiveForecastModel extends ForecastModel
     }
 
     // Add specified number of predictions beyond the sample.
-    for (int i = 0; i < predictions - 1; ++i)
+    for (int i = 0; i < projections - 1; ++i)
     {
       // Add the prediction to the forecast.
       forecast.add(prediction);

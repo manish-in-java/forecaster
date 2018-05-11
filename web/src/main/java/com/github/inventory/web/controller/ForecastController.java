@@ -19,6 +19,7 @@ import com.github.inventory.forecast.domain.Sample;
 import com.github.inventory.forecast.model.ForecastModel;
 import com.github.inventory.forecast.model.NaiveForecastModel;
 import com.github.inventory.forecast.model.SimpleAverageForecastModel;
+import com.github.inventory.forecast.model.WeightedAverageForecastModel;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,7 +86,9 @@ public class ForecastController
   {
     NAIVE(new NaiveForecastModel()),
 
-    SIMPLE_AVERAGE(new SimpleAverageForecastModel());
+    SIMPLE_AVERAGE(new SimpleAverageForecastModel()),
+
+    WEIGHTED_AVERAGE(new WeightedAverageForecastModel(new double[] { 4, 3, 2, 1 }));
 
     private final ForecastModel model;
 
