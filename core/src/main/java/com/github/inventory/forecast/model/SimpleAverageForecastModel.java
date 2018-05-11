@@ -60,7 +60,7 @@ import java.util.List;
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc42.htm">Averaging Techniques</a>
  */
-public class SimpleAverageForecastingModel extends ForecastingModel
+public class SimpleAverageForecastModel extends ForecastModel
 {
   /**
    * {@inheritDoc}

@@ -17,9 +17,9 @@ package com.github.inventory.web.controller;
 import com.github.inventory.forecast.domain.Forecast;
 import com.github.inventory.forecast.domain.Observation;
 import com.github.inventory.forecast.domain.Sample;
-import com.github.inventory.forecast.model.ForecastingModel;
-import com.github.inventory.forecast.model.NaiveForecastingModel;
-import com.github.inventory.forecast.model.SimpleAverageForecastingModel;
+import com.github.inventory.forecast.model.ForecastModel;
+import com.github.inventory.forecast.model.NaiveForecastModel;
+import com.github.inventory.forecast.model.SimpleAverageForecastModel;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,7 +43,7 @@ public class ForecastController
    */
   @PostMapping
   @ResponseBody
-  public SampleAndForecast forecast(final ForecastingModelEnum forecastingModel, final String sampleData, final Model model)
+  public SampleAndForecast forecast(final ForecastModelEnum forecastingModel, final String sampleData, final Model model)
   {
     final Sample sample = getSample(sampleData);
 
@@ -78,22 +78,22 @@ public class ForecastController
   }
 
   /**
-   * Represents a forecasting model to use for generating a forecast.
+   * Represents a model to use for generating a forecast.
    */
-  private enum ForecastingModelEnum
+  private enum ForecastModelEnum
   {
-    NAIVE(new NaiveForecastingModel()),
+    NAIVE(new NaiveForecastModel()),
 
-    SIMPLE_AVERAGE(new SimpleAverageForecastingModel());
+    SIMPLE_AVERAGE(new SimpleAverageForecastModel());
 
-    private final ForecastingModel model;
+    private final ForecastModel model;
 
     /**
      * Sets the forecasting model to use.
      *
-     * @param model A {@link ForecastingModel}.
+     * @param model A {@link ForecastModel}.
      */
-    ForecastingModelEnum(final ForecastingModel model)
+    ForecastModelEnum(final ForecastModel model)
     {
       this.model = model;
     }
@@ -102,9 +102,9 @@ public class ForecastController
      * Gets the forecasting model corresponding to use for generating a
      * forecast.
      *
-     * @return A {@link ForecastingModel}.
+     * @return A {@link ForecastModel}.
      */
-    ForecastingModel getModel()
+    ForecastModel getModel()
     {
       return model;
     }

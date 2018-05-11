@@ -23,11 +23,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for {@link SimpleAverageForecastingModel}.
+ * Unit tests for {@link SimpleAverageForecastModel}.
  */
-public class SimpleAverageForecastingModelTest extends ForecastingModelTest
+public class SimpleAverageForecastModelTest extends ForecastModelTest
 {
-  private static SimpleAverageForecastingModel MODEL;
+  private static SimpleAverageForecastModel MODEL;
 
   /**
    * Sets up objects required to run the tests.
@@ -35,7 +35,7 @@ public class SimpleAverageForecastingModelTest extends ForecastingModelTest
   @BeforeClass
   public static void setup()
   {
-    MODEL = new SimpleAverageForecastingModel();
+    MODEL = new SimpleAverageForecastModel();
   }
 
   /**
@@ -74,7 +74,7 @@ public class SimpleAverageForecastingModelTest extends ForecastingModelTest
    * {@inheritDoc}
    */
   @Override
-  ForecastingModel getForecastingModel()
+  ForecastModel getForecastingModel()
   {
     return MODEL;
   }

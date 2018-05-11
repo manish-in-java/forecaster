@@ -43,7 +43,7 @@ import java.util.List;
  * trends into account.
  * </p>
  */
-public class NaiveForecastingModel extends ForecastingModel
+public class NaiveForecastModel extends ForecastModel
 {
   /**
    * {@inheritDoc}

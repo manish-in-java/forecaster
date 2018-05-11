@@ -23,7 +23,7 @@ import java.util.Collection;
 /**
  * Contract for generating a forecast based on a sample.
  */
-public abstract class ForecastingModel
+public abstract class ForecastModel
 {
   /**
    * Generates a forecast based on a sample, containing a single prediction

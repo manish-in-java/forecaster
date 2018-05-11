@@ -26,11 +26,11 @@ import java.util.Iterator;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for {@link NaiveForecastingModel}.
+ * Unit tests for {@link NaiveForecastModel}.
  */
-public class NaiveForecastingModelTest extends ForecastingModelTest
+public class NaiveForecastModelTest extends ForecastModelTest
 {
-  private static NaiveForecastingModel MODEL;
+  private static NaiveForecastModel MODEL;
 
   /**
    * Sets up objects required to run the tests.
@@ -38,7 +38,7 @@ public class NaiveForecastingModelTest extends ForecastingModelTest
   @BeforeClass
   public static void setup()
   {
-    MODEL = new NaiveForecastingModel();
+    MODEL = new NaiveForecastModel();
   }
 
   /**
@@ -85,7 +85,7 @@ public class NaiveForecastingModelTest extends ForecastingModelTest
    * {@inheritDoc}
    */
   @Override
-  ForecastingModel getForecastingModel()
+  ForecastModel getForecastingModel()
   {
     return MODEL;
   }

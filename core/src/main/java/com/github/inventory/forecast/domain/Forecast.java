@@ -14,7 +14,7 @@
 
 package com.github.inventory.forecast.domain;
 
-import com.github.inventory.forecast.model.ForecastingModel;
+import com.github.inventory.forecast.model.ForecastModel;
 
 import java.util.Collection;
 import java.util.List;
@@ -24,10 +24,10 @@ import java.util.Vector;
  * <p>
  * Represents a collection of predictions. A forecast is generated on a
  * {@link Sample} of {@link Observation}s by applying a
- * {@link ForecastingModel}.
+ * {@link ForecastModel}.
  * </p>
  * <p>
- * The applied {@link ForecastingModel} generates
+ * The applied {@link ForecastModel} generates
  * a prediction for every single {@link Observation} in the {@link Sample}.
  * Since {@link Observation}s are data points collected in reality, the
  * prediction generated for an {@link Observation} allows comparing the

@@ -21,9 +21,9 @@ import org.junit.Test;
 import static org.junit.Assert.assertNull;
 
 /**
- * Unit tests for {@link ForecastingModel}.
+ * Unit tests for {@link ForecastModel}.
  */
-abstract class ForecastingModelTest implements UnitTest
+abstract class ForecastModelTest implements UnitTest
 {
   /**
    * Tests that a forecast cannot be obtained with empty sample.
@@ -44,11 +44,11 @@ abstract class ForecastingModelTest implements UnitTest
   }
 
   /**
-   * Gets a {@link ForecastingModel} for the tests.
+   * Gets a {@link ForecastModel} for the tests.
    *
-   * @return A {@link ForecastingModel}.
+   * @return A {@link ForecastModel}.
    */
-  abstract ForecastingModel getForecastingModel();
+  abstract ForecastModel getForecastingModel();
 
   /**
    * Gets empty sample for the tests.
