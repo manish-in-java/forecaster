@@ -61,7 +61,7 @@
                     , "data"        : observations
                     , "fill"        : false
                     , "lineTension" : 0.1
-                    , "label"       : "Sample"
+                    , "label"       : "Actual"
                   }, {
                     "borderColor"   : "rgb(75, 192, 192)"
                     , "data"        : predictions

@@ -50,8 +50,8 @@ import java.util.List;
  * <p>
  * Given that more recent observations should in general be a better
  * indication of future trends, a weighted-average forecast generated
- * using higher weights assigned to more recent observations is usually
- * more accurate than a simple-average forecast.
+ * using higher weights assigned to more recent observations is able to
+ * track the direction of change in the underlying data.
  * </p>
  * <p>
  * Other advantages of the model include suppression of random fluctuations
@@ -65,10 +65,11 @@ import java.util.List;
  * simple average model.
  * </p>
  * <p>
- * A major disadvantage of the model, given that it suppresses fluctuations,
+ * Another disadvantage of the model, given that it suppresses fluctuations,
  * is that it disregards anticipated fluctuations, on account of say,
  * seasonality. Therefore, forecasts for seasonal products may come out to be
- * highly inaccurate.
+ * highly inaccurate. Also, the model is sluggish to react to sudden changes
+ * in trend.
  * </p>
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc42.htm">Averaging Techniques</a>

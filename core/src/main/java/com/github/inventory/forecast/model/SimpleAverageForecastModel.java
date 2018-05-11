@@ -40,11 +40,6 @@ import java.util.List;
  * <li>{@literal average (11, 9, 13, 12, 11, 10, 11) = 11}</li>
  * </ul>
  * <p>
- * The bias for all predictions made by this model is {@literal zero}, which
- * is due to the fact that the bias is defined as the average total error and
- * the model predicts the average as the forecast, cancelling the two out.
- * </p>
- * <p>
  * This model is very simple and can make predictions quickly. It does not
  * require storing large amounts of data to generate a prediction, and
  * amplifies the most recent trends (upward or downward movement).
@@ -52,8 +47,8 @@ import java.util.List;
  * <p>
  * On the flip-side, a simple average forecast settles around the average
  * for a large sample size, thereby deleting any trends hidden within the
- * sample. For this reason, this model does not take into account seasonal,
- * or time-based trends.
+ * sample. For this reason, this model does not take into account any
+ * trends at all.
  * </p>
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc42.htm">Averaging Techniques</a>
