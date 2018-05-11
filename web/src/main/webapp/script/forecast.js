@@ -42,11 +42,8 @@
               // Stop animation.
               trigger.removeClass("loading");
 
-              // Extract samples from the response.
-              var observations = new Array();
-              for(var i = 0; i < response.sample.length; ++i) {
-                observations.push(response.sample[i].value);
-              }
+              // Extract observations from the response.
+              var observations = response.sample;
 
               // Extract predictions from the response.
               var options = new Array();

@@ -15,7 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Observation;
 import com.github.inventory.forecast.domain.Sample;
 
 import java.util.ArrayList;
@@ -73,9 +72,9 @@ public class SimpleAverageForecastModel extends ForecastModel
     double prediction = 0;
 
     // Generate predictions for each observation.
-    for (final Observation observation : sample)
+    for (final Double observation : sample)
     {
-      observations.add(observation.getValue());
+      observations.add(observation);
 
       // Find the simple average for the observations.
       prediction = observations.stream()

@@ -30,8 +30,8 @@ import java.util.Vector;
  * </p>
  */
 public class Sample
-    extends Vector<Observation>
-    implements List<Observation>, Collection<Observation>
+    extends Vector<Double>
+    implements List<Double>, Collection<Double>
 {
   /**
    * Constructs an empty sample.
@@ -52,20 +52,5 @@ public class Sample
   public Sample(final int size)
   {
     super(size);
-  }
-
-  /**
-   * Constructs a sample containing the elements of the specified
-   * collection, in the order they are returned by the collection's
-   * iterator.
-   *
-   * @param c The collection whose elements are to be placed into this
-   *          sample.
-   * @throws NullPointerException if the specified collection is
-   *                              {@literal null}.
-   */
-  public Sample(Collection<? extends Observation> c)
-  {
-    super(c);
   }
 }

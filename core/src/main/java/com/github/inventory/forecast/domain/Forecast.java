@@ -23,18 +23,17 @@ import java.util.Vector;
 /**
  * <p>
  * Represents a collection of predictions. A forecast is generated on a
- * {@link Sample} of {@link Observation}s by applying a
- * {@link ForecastModel}.
+ * {@link Sample} of observations by applying a {@link ForecastModel}.
  * </p>
  * <p>
- * The applied {@link ForecastModel} generates
- * a prediction for every single {@link Observation} in the {@link Sample}.
- * Since {@link Observation}s are data points collected in reality, the
- * prediction generated for an {@link Observation} allows comparing the
- * actual value versus the predicted value.
+ * The applied {@link ForecastModel} generates a prediction for every
+ * single observation in the {@link Sample}. Since observations are
+ * data points collected in reality, the prediction generated for an
+ * observation allows comparing the actual value versus the predicted
+ * value.
  * </p>
  * <p>
- * In addition to predictions for each {@link Observation}, forecast models
+ * In addition to predictions for each observation, forecast models
  * also generate a specified number of additional predictions.
  * </p>
  * <p>

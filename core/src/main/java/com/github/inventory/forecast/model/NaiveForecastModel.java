@@ -15,7 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Observation;
 import com.github.inventory.forecast.domain.Prediction;
 import com.github.inventory.forecast.domain.Sample;
 
@@ -60,12 +59,12 @@ public class NaiveForecastModel extends ForecastModel
     final List<Double> observations = new ArrayList<>();
     double prediction = 0;
 
-    for (final Observation observation : sample)
+    for (final Double observation : sample)
     {
-      observations.add(observation.getValue());
+      observations.add(observation);
 
       // Use the observed value as the prediction.
-      prediction = observation.getValue();
+      prediction = observation;
 
       // Copy the observed value as the next prediction.
       forecast.add(getPrediction(observations, prediction));

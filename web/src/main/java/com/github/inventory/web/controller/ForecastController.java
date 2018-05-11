@@ -15,7 +15,6 @@
 package com.github.inventory.web.controller;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Observation;
 import com.github.inventory.forecast.domain.Sample;
 import com.github.inventory.forecast.model.ForecastModel;
 import com.github.inventory.forecast.model.NaiveForecastModel;
@@ -28,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 
 /**
  * Forecast generator controller.
@@ -70,11 +68,14 @@ public class ForecastController
   {
     final String[] dataPoints = data != null ? data.split(",|;| |\\|") : new String[0];
 
-    return Arrays.stream(dataPoints)
-                 .filter(dataPoint -> dataPoint != null && !"".equals(dataPoint.trim()))
-                 .mapToDouble(Double::parseDouble)
-                 .mapToObj(Observation::new)
-                 .collect(Collectors.toCollection(Sample::new));
+    final Sample sample = new Sample();
+
+    Arrays.stream(dataPoints)
+          .filter(dataPoint -> dataPoint != null && !"".equals(dataPoint.trim()))
+          .mapToDouble(Double::parseDouble)
+          .forEach(sample::add);
+
+    return sample;
   }
 
   /**

@@ -15,7 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Observation;
 import com.github.inventory.forecast.domain.Sample;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -51,7 +50,7 @@ public class SimpleAverageForecastModelTest extends ForecastModelTest
 
     for (int i = 0; i < samples; ++i)
     {
-      sample.add(new Observation(getDouble()));
+      sample.add(getDouble());
     }
 
     // Generate a forecast for the sample.
