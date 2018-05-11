@@ -47,11 +47,9 @@
 
               // Extract predictions from the response.
               var options = new Array();
-              var predictions = new Array();
-              for(var i = 0; i < response.forecast.length; ++i) {
+              var predictions = response.forecast;
+              for(var i = 0; i < predictions.length; ++i) {
                 options.push(i + 1);
-
-                predictions.push(response.forecast[i].defined ? response.forecast[i].value : NaN);
               }
 
               // Display a line chart with the sample data.

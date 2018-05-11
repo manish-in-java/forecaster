@@ -15,7 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Prediction;
 import com.github.inventory.forecast.domain.Sample;
 
 import java.util.ArrayList;
@@ -50,35 +49,30 @@ public class NaiveForecastModel extends ForecastModel
   @Override
   Forecast generateForecast(final Sample sample, final int predictions)
   {
-    final Forecast forecast = new Forecast(sample.size() + predictions);
+    final List<Double> forecast = new ArrayList<>(sample.size() + predictions);
 
     // Add an undefined prediction corresponding to the first observation
     // in the sample, as there is no precedent for the first observation.
-    forecast.add(Prediction.undefined());
+    forecast.add(0d);
 
-    final List<Double> observations = new ArrayList<>();
     double prediction = 0;
 
     for (final Double observation : sample)
     {
-      observations.add(observation);
-
       // Use the observed value as the prediction.
       prediction = observation;
 
       // Copy the observed value as the next prediction.
-      forecast.add(getPrediction(observations, prediction));
+      forecast.add(prediction);
     }
 
     // Add specified number of predictions beyond the sample.
     for (int i = 0; i < predictions - 1; ++i)
     {
-      observations.add(prediction);
-
       // Add the prediction to the forecast.
-      forecast.add(getPrediction(observations, prediction));
+      forecast.add(prediction);
     }
 
-    return forecast;
+    return createForecast(sample, forecast);
   }
 }

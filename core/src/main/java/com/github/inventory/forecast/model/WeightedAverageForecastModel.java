@@ -17,6 +17,9 @@ package com.github.inventory.forecast.model;
 import com.github.inventory.forecast.domain.Forecast;
 import com.github.inventory.forecast.domain.Sample;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * <p>
  * Generates forecast for a sample as the weighted average of a given observed
@@ -121,11 +124,11 @@ public class WeightedAverageForecastModel extends ForecastModel
   @Override
   Forecast generateForecast(final Sample sample, final int predictions)
   {
-    final Forecast forecast = new Forecast(sample.size() + predictions);
+    final List<Double> forecast = new ArrayList<>(sample.size() + predictions);
 
     // Skip
 
-    return forecast;
+    return createForecast(sample, forecast);
   }
 
   /**

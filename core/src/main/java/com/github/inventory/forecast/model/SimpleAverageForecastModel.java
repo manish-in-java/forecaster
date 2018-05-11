@@ -66,7 +66,7 @@ public class SimpleAverageForecastModel extends ForecastModel
   @Override
   Forecast generateForecast(final Sample sample, final int predictions)
   {
-    final Forecast forecast = new Forecast(sample.size() + predictions);
+    final List<Double> forecast = new ArrayList<>(sample.size() + predictions);
 
     final List<Double> observations = new ArrayList<>();
     double prediction = 0;
@@ -83,7 +83,7 @@ public class SimpleAverageForecastModel extends ForecastModel
                                .orElse(0);
 
       // Add the prediction to the forecast.
-      forecast.add(getPrediction(observations, prediction));
+      forecast.add(prediction);
     }
 
     // Add specified number of predictions beyond the sample.
@@ -98,9 +98,9 @@ public class SimpleAverageForecastModel extends ForecastModel
                                .orElse(0);
 
       // Add the prediction to the forecast.
-      forecast.add(getPrediction(observations, prediction));
+      forecast.add(prediction);
     }
 
-    return forecast;
+    return createForecast(sample, forecast);
   }
 }

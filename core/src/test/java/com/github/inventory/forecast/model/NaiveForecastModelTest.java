@@ -15,7 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Prediction;
 import com.github.inventory.forecast.domain.Sample;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -62,22 +61,27 @@ public class NaiveForecastModelTest extends ForecastModelTest
     assertFalse(subject.isEmpty());
     assertTrue(subject.size() > samples);
 
-    final Iterator<Prediction> iterator = subject.iterator();
+    final Iterator<Double> iterator = subject.iterator();
 
     // Ensure that the first prediction is undefined.
-    Prediction prediction = iterator.next();
+    Double prediction = iterator.next();
 
-    assertNotNull(prediction);
-    assertFalse(prediction.isDefined());
+    assertEquals(0d, prediction, 0d);
 
     while (iterator.hasNext())
     {
       prediction = iterator.next();
 
       assertNotNull(prediction);
-      assertTrue(prediction.isDefined());
-      assertNotNull(prediction.toString());
+      assertNotEquals(0d, prediction);
     }
+
+    // Ensure that the accuracy measures have been calculated.
+    assertNotEquals(0d, subject.getBias());
+    assertNotEquals(0d, subject.getMeanAbsoluteDeviation());
+    assertNotEquals(0d, subject.getMeanAbsolutePercentageError());
+    assertNotEquals(0d, subject.getMeanSquaredError());
+    assertNotEquals(0d, subject.getTotalAbsoluteError());
   }
 
   /**

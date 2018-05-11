@@ -15,10 +15,9 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Prediction;
 import com.github.inventory.forecast.domain.Sample;
 
-import java.util.Collection;
+import java.util.List;
 
 /**
  * Contract for generating a forecast based on a sample.
@@ -63,34 +62,15 @@ public abstract class ForecastModel
   }
 
   /**
-   * Gets the prediction for a sample, given a forecast value.
+   * Creates a forecast for a sample using specified predictions.
    *
-   * @param sample   The sample for which the forecast has been generated.
-   * @param forecast The forecast value for the sample.
-   * @return A {@link Prediction}.
+   * @param sample      The sample for which the forecast has to be generated.
+   * @param predictions The predictions to include in the forecast.
+   * @return A {@link Forecast}.
    */
-  Prediction getPrediction(final Collection<Double> sample, final double forecast)
+  Forecast createForecast(final Sample sample, final List<Double> predictions)
   {
-    double absoluteError = 0.0, absolutePercentageError = 0.0, squaredError = 0.0, totalError = 0.0;
-
-    for (final Double observation : sample)
-    {
-      final double error = forecast - observation;
-
-      absoluteError += Math.abs(error);
-      absolutePercentageError += Math.abs(error / observation);
-      squaredError += error * error;
-      totalError += error;
-    }
-
-    final int observations = sample.size();
-
-    return new Prediction(forecast
-        , absoluteError
-        , totalError / observations
-        , squaredError / observations
-        , absoluteError / observations
-        , absolutePercentageError / observations);
+    return new Forecast(sample, predictions);
   }
 
   /**

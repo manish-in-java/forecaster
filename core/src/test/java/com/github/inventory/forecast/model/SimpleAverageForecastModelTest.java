@@ -60,13 +60,14 @@ public class SimpleAverageForecastModelTest extends ForecastModelTest
     assertFalse(subject.isEmpty());
     assertTrue(subject.size() > samples);
 
-    subject.forEach(prediction -> {
-      assertNotNull(prediction);
-      assertNotEquals(0, prediction.getMeanSquaredError());
-      assertNotEquals(0, prediction.getValue());
-      assertTrue(prediction.isDefined());
-      assertNotNull(prediction.toString());
-    });
+    subject.forEach(prediction -> assertNotEquals(0d, prediction));
+
+    // Ensure that the accuracy measures have been calculated.
+    assertNotEquals(0d, subject.getBias());
+    assertNotEquals(0d, subject.getMeanAbsoluteDeviation());
+    assertNotEquals(0d, subject.getMeanAbsolutePercentageError());
+    assertNotEquals(0d, subject.getMeanSquaredError());
+    assertNotEquals(0d, subject.getTotalAbsoluteError());
   }
 
   /**
