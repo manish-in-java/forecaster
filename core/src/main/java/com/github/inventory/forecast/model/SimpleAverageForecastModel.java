@@ -48,14 +48,13 @@ import java.util.List;
  * <p>
  * This model is very simple and can make predictions quickly. It does not
  * require storing large amounts of data to generate a prediction, and
- * amplifies the most recent trends (upward or downwad movement).
+ * amplifies the most recent trends (upward or downward movement).
  * </p>
  * <p>
- * On the flip-side, a simple average forecast always lags behind any trend
- * in the sample data. This is because it can only operate upon the known
- * (past) data, which shields it from the trends hidden within the data. For
- * this reason, this model does not take into account seasonal, or time-based
- * trends.
+ * On the flip-side, a simple average forecast settles around the average
+ * for a large sample size, thereby deleting any trends hidden within the
+ * sample. For this reason, this model does not take into account seasonal,
+ * or time-based trends.
  * </p>
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc42.htm">Averaging Techniques</a>

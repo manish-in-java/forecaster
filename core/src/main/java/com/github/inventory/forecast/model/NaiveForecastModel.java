@@ -29,7 +29,7 @@ import java.util.List;
  * </p>
  * <p>
  * For example, given the sample {@literal [11, 9, 13, 12, 11, 10]}, the
- * forecast will be {@literal [-, 11, 9, 13, 12, 11, 10]}, where {@literal -}
+ * forecast will be {@literal [-, 11, 9, 13, 12, 11, 10]}, where {@literal "-"}
  * signifies that the prediction is unavailable or undefined.
  * </p>
  * <p>
