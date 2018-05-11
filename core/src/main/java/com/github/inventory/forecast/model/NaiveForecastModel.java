@@ -36,7 +36,7 @@ import java.util.List;
  * This model simply says {@literal what happened last time will happen again}.
  * This strategy makes this model very cheap, as no computation. Given the way
  * this model generates predictions, it is mostly used as a baseline to compare
- * accuracy of other forecasting models. It is best suited for scenarios where
+ * accuracy of other forecast models. It is best suited for scenarios where
  * the trend is mostly flat and there are no fluctuations in the sample data.
  * When the sample data fluctuates up or down, with some underlying trend,
  * this model may produce unusable predictions, since it does not take any

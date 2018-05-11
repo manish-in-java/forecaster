@@ -35,11 +35,11 @@
  * </p>
  * <p>
  * There are many forecasting techniques. Each technique, known as a
- * {@literal Forecasting Model} (or {@literal Model} in short) attempts to
+ * {@literal Forecast Model} (or {@literal Model} in short) attempts to
  * analyze the sample in a certain way so as to be as accurate as possible.
  * Each model amplifies or suppresses one or more pattern underlying the sample
  * set. As a result, different types of samples benefit from different
- * forecasting models.
+ * forecast models.
  * </p>
  */
 package com.github.inventory.forecast;

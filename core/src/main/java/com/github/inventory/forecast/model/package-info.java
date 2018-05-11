@@ -13,6 +13,6 @@
  */
 
 /**
- * Provides various forecasting models.
+ * Provides various forecast models.
  */
 package com.github.inventory.forecast.model;

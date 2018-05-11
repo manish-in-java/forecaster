@@ -46,9 +46,9 @@ public abstract class ForecastModel
    *                    generated.
    * @param predictions The number of predictions to generate from the sample.
    *                    The actual number of predictions generated and included
-   *                    in the forecast depends on the forecasting model. If
-   *                    the specified number of predictions is negative, it is
-   *                    forcibly reset to {@literal zero}.
+   *                    in the forecast depends on the actual forecast model
+   *                    used. If the specified number of predictions is
+   *                    negative, it is forcibly reset to {@literal zero}.
    * @return A {@link Forecast}, if {@code sample} is not {@literal null} or
    * empty, {@literal null} otherwise.
    */

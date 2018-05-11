@@ -89,7 +89,7 @@ public class ForecastController
     private final ForecastModel model;
 
     /**
-     * Sets the forecasting model to use.
+     * Sets the forecast model to use.
      *
      * @param model A {@link ForecastModel}.
      */
@@ -99,8 +99,7 @@ public class ForecastController
     }
 
     /**
-     * Gets the forecasting model corresponding to use for generating a
-     * forecast.
+     * Gets the forecast model corresponding to use for generating a forecast.
      *
      * @return A {@link ForecastModel}.
      */

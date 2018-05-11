@@ -34,7 +34,7 @@ import java.util.Vector;
  * actual value versus the predicted value.
  * </p>
  * <p>
- * In addition to predictions for each {@link Observation}, forecasting models
+ * In addition to predictions for each {@link Observation}, forecast models
  * also generate a specified number of additional predictions.
  * </p>
  * <p>

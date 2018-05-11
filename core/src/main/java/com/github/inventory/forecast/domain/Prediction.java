@@ -22,12 +22,12 @@ import java.io.Serializable;
  * {@literal undefined}. When {@literal defined}, a prediction has a
  * {@literal value} and a {@literal mean-squared-error (MSE)}, which is a
  * measure of the prediction accuracy. For predictions obtained using
- * different forecasting models from the same data, lower {@literal MSE}
+ * different forecast models from the same data, lower {@literal MSE}
  * signifies higher accuracy, and vice-versa.
  * </p>
  * <p>An {@literal undefined} prediction is one which cannot be determined
- * for the observed data by a particular forecasting model. For example, if
- * a forecasting model that requires one full year of past data to make
+ * for the observed data by a particular forecast model. For example, if
+ * a forecast model that requires one full year of past data to make
  * a prediction is invoked to generate a prediction with only 6 months of
  * data, the model may return an {@literal undefined} prediction to indicate
  * that it is unable to make the requested prediction.</p>
