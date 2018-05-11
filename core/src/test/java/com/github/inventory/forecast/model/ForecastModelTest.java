@@ -31,7 +31,7 @@ abstract class ForecastModelTest implements UnitTest
   @Test
   public void testForecastWithEmptySampleSet()
   {
-    assertNull(getForecastingModel().forecast(getEmptySample()));
+    assertNull(getForecastModel().forecast(getEmptySample()));
   }
 
   /**
@@ -40,7 +40,7 @@ abstract class ForecastModelTest implements UnitTest
   @Test
   public void testForecastWithNullSampleSet()
   {
-    assertNull(getForecastingModel().forecast(null));
+    assertNull(getForecastModel().forecast(null));
   }
 
   /**
@@ -48,7 +48,7 @@ abstract class ForecastModelTest implements UnitTest
    *
    * @return A {@link ForecastModel}.
    */
-  abstract ForecastModel getForecastingModel();
+  abstract ForecastModel getForecastModel();
 
   /**
    * Gets empty sample for the tests.

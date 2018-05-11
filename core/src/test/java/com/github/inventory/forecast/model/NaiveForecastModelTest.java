@@ -55,7 +55,7 @@ public class NaiveForecastModelTest extends ForecastModelTest
     }
 
     // Generate a forecast for the sample.
-    final Forecast subject = getForecastingModel().forecast(sample, getInt(5, 10));
+    final Forecast subject = getForecastModel().forecast(sample, getInt(5, 10));
 
     assertNotNull(subject);
     assertFalse(subject.isEmpty());
@@ -88,7 +88,7 @@ public class NaiveForecastModelTest extends ForecastModelTest
    * {@inheritDoc}
    */
   @Override
-  ForecastModel getForecastingModel()
+  ForecastModel getForecastModel()
   {
     return MODEL;
   }

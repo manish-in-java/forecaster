@@ -45,6 +45,7 @@ block content
                       option(selected="selected", value="NAIVE") Naive
                       option(value="SIMPLE_AVERAGE") Simple Average
                       option(value="WEIGHTED_AVERAGE") Weighted Average [4, 3, 2, 1]
+                      option(value="SINGLE_MOVING_AVERAGE") Single Moving Average [groups of 3]
                   button.ui.blue.button(id="trigger", role="button", type="button", v-on:click="forecast") Plot
               .column
                 .ui.large.error.message(v-if="error")

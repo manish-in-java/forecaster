@@ -22,12 +22,12 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 /**
- * Unit tests for {@link WeightedAverageForecastModel}.
+ * Unit tests for {@link SingleMovingAverageForecastModel}.
  */
-public class WeightedAverageForecastModelTest extends ForecastModelTest
+public class SingleMovingAverageForecastModelTest extends ForecastModelTest
 {
-  private static WeightedAverageForecastModel MODEL;
-  private static double[]                     WEIGHTS;
+  private static int                              GROUP;
+  private static SingleMovingAverageForecastModel MODEL;
 
   /**
    * Sets up objects required to run the tests.
@@ -35,13 +35,13 @@ public class WeightedAverageForecastModelTest extends ForecastModelTest
   @BeforeClass
   public static void setup()
   {
-    WEIGHTS = new double[] { 4, 3, 2, 1 };
-    MODEL = new WeightedAverageForecastModel(WEIGHTS);
+    GROUP = 4;
+    MODEL = new SingleMovingAverageForecastModel(GROUP);
   }
 
   /**
-   * Tests that the weighted average forecast can be correctly generated for
-   * a sample.
+   * Tests that the single moving average forecast can be correctly generated
+   * for a sample.
    */
   @Test
   public void testForecast()
@@ -64,10 +64,10 @@ public class WeightedAverageForecastModelTest extends ForecastModelTest
 
     for (int i = 0; i < subject.size(); ++i)
     {
-      if (i < WEIGHTS.length - 1)
+      if (i < GROUP - 1)
       {
         // The first few predictions must be undefined because there won't
-        // be enough observations to generate the weighted average.
+        // be enough observations to generate the moving average.
         assertEquals(0d, subject.get(i), 0);
       }
       else

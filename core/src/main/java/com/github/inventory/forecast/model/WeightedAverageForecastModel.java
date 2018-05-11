@@ -113,13 +113,25 @@ public class WeightedAverageForecastModel extends ForecastModel
    *
    * @param weights The weights to use for computing the weighted average
    *                for observed values. If {@literal null} or empty, defaults
-   *                to the simple average model.
+   *                to the naive forecast model. Using more weights than the
+   *                number of observations in a sample will lead to undefined
+   *                predictions, due to the fact that the minimum group
+   *                required to calculate the weighted average will fail to
+   *                form.
    */
   public WeightedAverageForecastModel(final double[] weights)
   {
     super();
 
     setWeights(weights);
+  }
+
+  /**
+   * Creates a forecast model without the weights assigned.
+   */
+  WeightedAverageForecastModel()
+  {
+    super();
   }
 
   /**
@@ -195,7 +207,7 @@ public class WeightedAverageForecastModel extends ForecastModel
    * @param weights The weights to use for computing the weighted average for
    *                observed values.
    */
-  private void setWeights(final double[] weights)
+  protected void setWeights(final double[] weights)
   {
     if (weights == null || weights.length < 2)
     {

@@ -16,10 +16,7 @@ package com.github.inventory.web.controller;
 
 import com.github.inventory.forecast.domain.Forecast;
 import com.github.inventory.forecast.domain.Sample;
-import com.github.inventory.forecast.model.ForecastModel;
-import com.github.inventory.forecast.model.NaiveForecastModel;
-import com.github.inventory.forecast.model.SimpleAverageForecastModel;
-import com.github.inventory.forecast.model.WeightedAverageForecastModel;
+import com.github.inventory.forecast.model.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -85,6 +82,8 @@ public class ForecastController
   private enum ForecastModelEnum
   {
     NAIVE(new NaiveForecastModel()),
+
+    SINGLE_MOVING_AVERAGE(new SingleMovingAverageForecastModel(3)),
 
     SIMPLE_AVERAGE(new SimpleAverageForecastModel()),
 
