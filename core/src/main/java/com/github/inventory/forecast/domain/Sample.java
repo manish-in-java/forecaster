@@ -14,43 +14,57 @@
 
 package com.github.inventory.forecast.domain;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
+import java.util.Arrays;
 
 /**
  * <p>
- * Represents a collection of observations. The order of the observations
- * in the collection may not be chronological. If used with a forecasting
- * model that is sensitive to the chronological ordering of the observations,
- * may produce an inaccurate forecast.
+ * Represents a collection of observations. The order of observations in the
+ * collection may not be chronological. If used with a forecasting model that
+ * is sensitive to the chronological ordering of the observations, may produce
+ * an inaccurate forecast if the observations are out of order.
  * </p>
  * <p>
  * This class is thread-safe.
  * </p>
  */
 public class Sample
-    extends Vector<Double>
-    implements List<Double>, Collection<Double>
 {
+  private final double[] observations;
+
   /**
-   * Constructs an empty sample.
+   * Constructs a sample of given observations.
+   *
+   * @param observations The observations for the sample.
+   * @throws NullPointerException     if {@code observations} is
+   *                                  {@literal null}.
+   * @throws IllegalArgumentException if {@code observations} is empty.
    */
-  public Sample()
+  public Sample(final double[] observations)
   {
     super();
+
+    // Ensure that the observations have been specified.
+    if (observations == null)
+    {
+      throw new NullPointerException("Observations must not be null.");
+    }
+    // Ensure that the observations are non-empty.
+    else if (observations.length == 0)
+    {
+      throw new IllegalArgumentException("Observations must not be empty.");
+    }
+
+    this.observations = observations;
   }
 
   /**
-   * Constructs an empty sample with capacity to hold the specified number of
-   * observations.
+   * Gets the observations included in the sample.
    *
-   * @param size The number of observations in the sample.
-   * @throws IllegalArgumentException if the number of observations is
-   *                                  negative.
+   * @return A copy of the observations included in the sample. This ensures
+   * that the actual sample, once generated, cannot be changed from outside.
    */
-  public Sample(final int size)
+  public double[] getObservations()
   {
-    super(size);
+    return Arrays.copyOf(observations, observations.length);
   }
 }

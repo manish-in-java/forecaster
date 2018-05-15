@@ -66,14 +66,12 @@ public class ForecastController
   {
     final String[] dataPoints = data != null ? data.split(",|;| |\\|") : new String[0];
 
-    final Sample sample = new Sample();
+    final double[] observations = Arrays.stream(dataPoints)
+                                        .filter(dataPoint -> dataPoint != null && !"".equals(dataPoint.trim()))
+                                        .mapToDouble(Double::parseDouble)
+                                        .toArray();
 
-    Arrays.stream(dataPoints)
-          .filter(dataPoint -> dataPoint != null && !"".equals(dataPoint.trim()))
-          .mapToDouble(Double::parseDouble)
-          .forEach(sample::add);
-
-    return sample;
+    return new Sample(observations);
   }
 
   /**

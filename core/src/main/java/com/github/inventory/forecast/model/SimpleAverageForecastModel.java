@@ -15,10 +15,8 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Sample;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 /**
  * <p>
@@ -59,43 +57,34 @@ public class SimpleAverageForecastModel extends ForecastModel
    * {@inheritDoc}
    */
   @Override
-  Forecast generateForecast(final Sample sample, final int projections)
+  Forecast generateForecast(final double[] observations, final int projections)
   {
-    final List<Double> forecast = new ArrayList<>(sample.size() + projections);
+    final double[] predictions = new double[observations.length + projections];
 
-    final List<Double> observations = new ArrayList<>();
-    double prediction = 0;
+    double prediction = 0.0;
 
     // Generate predictions for each observation.
-    for (final Double observation : sample)
+    for (int i = 0; i < observations.length; ++i)
     {
-      observations.add(observation);
-
-      // Find the simple average for the observations.
-      prediction = observations.stream()
-                               .mapToDouble(d -> d)
-                               .average()
-                               .orElse(0);
-
-      // Add the prediction to the forecast.
-      forecast.add(prediction);
+      // Add the simple average for the observations encountered so far
+      // to the forecast.
+      predictions[i] = prediction = getSimpleAverage(Arrays.copyOf(observations, i + 1));
     }
 
     // Add specified number of predictions beyond the sample.
     for (int i = 0; i < projections; ++i)
     {
-      observations.add(prediction);
+      // Extend the sample to the required number of projections.
+      final double[] extended = Arrays.copyOf(predictions, observations.length + i + 1);
 
-      // Find the simple average for the observations.
-      prediction = observations.stream()
-                               .mapToDouble(d -> d)
-                               .average()
-                               .orElse(0);
+      // Set the last value of the extended sample to the previous prediction.
+      extended[observations.length + i] = prediction;
 
-      // Add the prediction to the forecast.
-      forecast.add(prediction);
+      // Find the simple average for the extended sample and add it to the
+      // forecast.
+      predictions[observations.length + i] = prediction = getSimpleAverage(extended);
     }
 
-    return createForecast(sample, forecast);
+    return createForecast(observations, predictions);
   }
 }

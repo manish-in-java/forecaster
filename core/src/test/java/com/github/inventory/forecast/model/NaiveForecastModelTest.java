@@ -19,8 +19,6 @@ import com.github.inventory.forecast.domain.Sample;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Iterator;
-
 import static org.junit.Assert.*;
 
 /**
@@ -46,42 +44,37 @@ public class NaiveForecastModelTest extends ForecastModelTest
   public void testForecast()
   {
     // Generate a sample of random values.
-    final int samples = getInt(11, 20);
-    final Sample sample = new Sample(samples);
+    final int samples = getSampleCount();
+    final double[] observations = new double[samples];
 
     for (int i = 0; i < samples; ++i)
     {
-      sample.add(getDouble());
+      observations[i] = getDouble();
     }
 
     // Generate a forecast for the sample.
-    final Forecast subject = getForecastModel().forecast(sample, getInt(5, 10));
+    final Forecast subject = getForecastModel().forecast(new Sample(observations), getProjectionCount());
+    final double[] predictions = subject.getPredictions();
 
     assertNotNull(subject);
-    assertFalse(subject.isEmpty());
-    assertTrue(subject.size() > samples);
-
-    final Iterator<Double> iterator = subject.iterator();
+    assertNotNull(predictions);
+    assertTrue(predictions.length > samples);
 
     // Ensure that the first prediction is undefined.
-    Double prediction = iterator.next();
+    assertEquals(0.0, predictions[0], 0.0);
 
-    assertEquals(0d, prediction, 0d);
-
-    while (iterator.hasNext())
+    for (int i = 1; i < predictions.length; ++i)
     {
-      prediction = iterator.next();
-
-      assertNotNull(prediction);
-      assertNotEquals(0d, prediction);
+      assertNotEquals(0.0, predictions[i]);
     }
 
     // Ensure that the accuracy measures have been calculated.
-    assertNotEquals(0d, subject.getBias());
-    assertNotEquals(0d, subject.getMeanAbsoluteDeviation());
-    assertNotEquals(0d, subject.getMeanAbsolutePercentageError());
-    assertNotEquals(0d, subject.getMeanSquaredError());
-    assertNotEquals(0d, subject.getTotalAbsoluteError());
+    assertNotEquals(0.0, subject.getBias());
+    assertNotEquals(0.0, subject.getMeanAbsoluteDeviation());
+    assertNotEquals(0.0, subject.getMeanAbsolutePercentageError());
+    assertNotEquals(0.0, subject.getMeanSquaredError());
+    assertNotEquals(0.0, subject.getTotalAbsoluteError());
+    assertNotEquals(0.0, subject.getTotalSquaredError());
   }
 
   /**

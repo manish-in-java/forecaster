@@ -45,29 +45,34 @@ public class SimpleAverageForecastModelTest extends ForecastModelTest
   public void testForecast()
   {
     // Generate a sample of random values.
-    final int samples = getInt(11, 20);
-    final Sample sample = new Sample(samples);
+    final int samples = getSampleCount();
+    final double[] observations = new double[samples];
 
     for (int i = 0; i < samples; ++i)
     {
-      sample.add(getDouble());
+      observations[i] = getDouble();
     }
 
     // Generate a forecast for the sample.
-    final Forecast subject = getForecastModel().forecast(sample, getInt(5, 10));
+    final Forecast subject = getForecastModel().forecast(new Sample(observations), getProjectionCount());
+    final double[] predictions = subject.getPredictions();
 
     assertNotNull(subject);
-    assertFalse(subject.isEmpty());
-    assertTrue(subject.size() > samples);
+    assertNotNull(predictions);
+    assertTrue(predictions.length > samples);
 
-    subject.forEach(prediction -> assertNotEquals(0d, prediction));
+    for (final double prediction : predictions)
+    {
+      assertNotEquals(0.0, prediction);
+    }
 
     // Ensure that the accuracy measures have been calculated.
-    assertNotEquals(0d, subject.getBias());
-    assertNotEquals(0d, subject.getMeanAbsoluteDeviation());
-    assertNotEquals(0d, subject.getMeanAbsolutePercentageError());
-    assertNotEquals(0d, subject.getMeanSquaredError());
-    assertNotEquals(0d, subject.getTotalAbsoluteError());
+    assertNotEquals(0.0, subject.getBias());
+    assertNotEquals(0.0, subject.getMeanAbsoluteDeviation());
+    assertNotEquals(0.0, subject.getMeanAbsolutePercentageError());
+    assertNotEquals(0.0, subject.getMeanSquaredError());
+    assertNotEquals(0.0, subject.getTotalAbsoluteError());
+    assertNotEquals(0.0, subject.getTotalSquaredError());
   }
 
   /**

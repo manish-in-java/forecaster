@@ -17,7 +17,9 @@ package com.github.inventory.forecast.model;
 import com.github.inventory.forecast.domain.Forecast;
 import com.github.inventory.forecast.domain.Sample;
 
-import java.util.List;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * Contract for generating a forecast based on a sample.
@@ -29,8 +31,8 @@ public abstract class ForecastModel
    * beyond the sample size.
    *
    * @param sample The sample based on which the forecast should be generated.
-   * @return A {@link Forecast}, if {@code sample} is not {@literal null} or
-   * empty, {@literal null} otherwise.
+   * @return A {@link Forecast}, if {@code sample} is not {@literal null},
+   * {@literal null} otherwise.
    */
   public Forecast forecast(final Sample sample)
   {
@@ -57,41 +59,70 @@ public abstract class ForecastModel
    */
   public Forecast forecast(final Sample sample, final int projections)
   {
-    if (sample == null || sample.isEmpty())
+    if (sample == null)
     {
       return null;
     }
 
-    return generateForecast(sample, Math.max(0, projections));
+    return generateForecast(sample.getObservations(), Math.max(0, projections));
   }
 
   /**
-   * Creates a forecast for a sample using specified predictions.
+   * Creates a forecast for a sample of observations with corresponding
+   * predictions.
    *
-   * @param sample      The sample for which the forecast has to be generated.
-   * @param predictions The predictions to include in the forecast.
+   * @param observations The observations for the sample for which the
+   *                     forecast has to be created.
+   * @param predictions  The predictions to include in the forecast.
    * @return A {@link Forecast}.
    */
-  Forecast createForecast(final Sample sample, final List<Double> predictions)
+  Forecast createForecast(final double[] observations, final double[] predictions)
   {
-    return new Forecast(sample, predictions);
+    return new Forecast(observations, predictions);
   }
 
   /**
-   * Generates a forecast based on a sample.
+   * Gets the simple average for an array of observations.
    *
-   * @param sample      The sample based on which the forecast should be
-   *                    generated.
-   * @param projections The number of predictions to generate from the sample
-   *                    beyond the observations already included in the sample.
-   *                    If negative, is forcibly reset to {@literal zero}.
-   *                    For example, if {@code sample} contains {@literal 10}
-   *                    observations, and {@code projections} is specified as
-   *                    {@literal 4}, the generated forecast will contain a
-   *                    total of {@literal 14} predictions; one each for the
-   *                    {@literal 10} observations in the sample, and
-   *                    {@literal 4} additional beyond the sample set.
+   * @param observations The array of observations for which the
+   *                     simple average is required.
+   * @return The simple average for the observations.
+   */
+  double getSimpleAverage(final double[] observations)
+  {
+    return getSimpleAverage(Arrays.stream(observations).boxed().collect(Collectors.toList()));
+  }
+
+  /**
+   * Generates a forecast based on a sample of observations.
+   *
+   * @param observations The observations based on which the forecast should be
+   *                     generated.
+   * @param projections  The number of predictions to generate from the sample
+   *                     beyond the observations already included in the
+   *                     sample. If negative, is forcibly reset to
+   *                     {@literal zero}. For example, if there are
+   *                     {@literal 10} observations, and {@code projections} is
+   *                     specified as {@literal 4}, the generated forecast will
+   *                     contain a total of {@literal 14} predictions; one each
+   *                     for the {@literal 10} observations in the sample, and
+   *                     {@literal 4} additional beyond the sample set.
    * @return A {@link Forecast}.
    */
-  abstract Forecast generateForecast(final Sample sample, final int projections);
+  abstract Forecast generateForecast(final double[] observations, final int projections);
+
+  /**
+   * Gets the simple average for a collection of observations.
+   *
+   * @param observations The collection of observations for which the
+   *                     simple average is required.
+   * @return The simple average for the observations.
+   */
+  private double getSimpleAverage(final Collection<Double> observations)
+  {
+    return observations.stream()
+                       .mapToDouble(d -> d)
+                       .average()
+                       .orElse(0);
+  }
 }

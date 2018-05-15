@@ -43,11 +43,11 @@
               trigger.removeClass("loading");
 
               // Extract observations from the response.
-              var observations = response.sample;
+              var observations = response.sample.observations;
 
               // Extract predictions from the response.
               var options = new Array();
-              var predictions = response.forecast;
+              var predictions = response.forecast.predictions;
               for(var i = 0; i < predictions.length; ++i) {
                 options.push(i + 1);
               }

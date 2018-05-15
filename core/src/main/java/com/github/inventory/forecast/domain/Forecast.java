@@ -16,9 +16,7 @@ package com.github.inventory.forecast.domain;
 
 import com.github.inventory.forecast.model.ForecastModel;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Vector;
+import java.util.Arrays;
 
 /**
  * <p>
@@ -45,27 +43,55 @@ import java.util.Vector;
  * </p>
  */
 public class Forecast
-    extends Vector<Double>
-    implements List<Double>, Collection<Double>
 {
-  private double bias;
-  private double meanAbsoluteDeviation;
-  private double meanAbsolutePercentageError;
-  private double meanSquaredError;
-  private double totalAbsoluteError;
+  private       double   bias;
+  private       double   meanAbsoluteDeviation;
+  private       double   meanAbsolutePercentageError;
+  private       double   meanSquaredError;
+  private final double[] predictions;
+  private       double   totalAbsoluteError;
+  private       double   totalSquaredError;
 
   /**
-   * Constructs a forecast for a given sample and its associated predictions.
+   * Constructs a forecast for a given sample of observations and associated
+   * predictions.
    *
-   * @param sample      The sample for which the forecast has been generated.
-   * @param predictions The predictions to include in the forecast.
-   * @throws NullPointerException if {@code predictions} is {@literal null}.
+   * @param observations The sample for which the forecast has been generated.
+   * @param predictions  The predictions to include in the forecast.
+   * @throws NullPointerException     if {@code observations} or
+   *                                  {@code predictions} is {@literal null}.
+   * @throws IllegalArgumentException if  {@code observations} or
+   *                                  *                                  {@code predictions} is empty.
    */
-  public Forecast(final Sample sample, final List<Double> predictions)
+  public Forecast(final double[] observations, final double[] predictions)
   {
-    super(predictions);
+    super();
 
-    calculateMeasures(sample, predictions);
+    // Ensure that the observations have been specified.
+    if (observations == null)
+    {
+      throw new NullPointerException("Observations must not be null.");
+    }
+    // Ensure that the observations are non-empty.
+    else if (observations.length == 0)
+    {
+      throw new IllegalArgumentException("Observations must not be empty.");
+    }
+
+    // Ensure that the predictions have been specified.
+    if (predictions == null)
+    {
+      throw new NullPointerException("Predictions must not be null.");
+    }
+    // Ensure that the predictions are non-empty.
+    else if (predictions.length == 0)
+    {
+      throw new IllegalArgumentException("Predictions must not be empty.");
+    }
+
+    this.predictions = predictions;
+
+    calculateMeasures(observations, predictions);
   }
 
   /**
@@ -115,14 +141,36 @@ public class Forecast
   }
 
   /**
-   * Gets the {@literal total-absolute-error} ({@literal SAE}) for the
-   * forecast.
+   * Gets the predictions included in the forecast.
+   *
+   * @return A copy of the predictions included in the forecast. This ensures
+   * that the actual forecast, once generated, cannot be changed from outside.
+   */
+  public double[] getPredictions()
+  {
+    return Arrays.copyOf(predictions, predictions.length);
+  }
+
+  /**
+   * Gets the {@literal total-absolute-error} (also known as
+   * {@literal sum-of-absolute-error (SAE)}) for the forecast.
    *
    * @return The {@literal total-absolute-error} for the forecast.
    */
   public double getTotalAbsoluteError()
   {
     return totalAbsoluteError;
+  }
+
+  /**
+   * Gets the {@literal total-squared-error} (also known as
+   * {@literal sum-of-squared-error (SSE)}) for the forecast.
+   *
+   * @return The {@literal total-squared-error} for the forecast.
+   */
+  public double getTotalSquaredError()
+  {
+    return totalSquaredError;
   }
 
   /**
@@ -133,25 +181,20 @@ public class Forecast
    *                     was generated.
    * @param predictions  The predicted values for the forecast.
    */
-  private void calculateMeasures(final List<Double> observations, final List<Double> predictions)
+  private void calculateMeasures(final double[] observations, final double[] predictions)
   {
-    if (observations == null || observations.isEmpty() || predictions == null || predictions.isEmpty())
-    {
-      return;
-    }
-
     double absoluteError = 0.0, absolutePercentageError = 0.0, squaredError = 0.0, totalError = 0.0;
 
     // Calculate errors for the observed values.
-    final int observationCount = observations.size();
+    final int observationCount = observations.length;
     for (int i = 0; i < observationCount; ++i)
     {
-      final double observation = observations.get(i), prediction = predictions.get(i);
+      final double observation = observations[i], prediction = predictions[i];
 
       // Determine the error in prediction. If the predicted value is zero,
       // consider it to be invalid and use the observed value itself as the
       // predicted value.
-      final double error = (prediction != 0 ? prediction : observation) - observation;
+      final double error = observation - (prediction != 0 ? prediction : observation);
 
       absoluteError += Math.abs(error);
       absolutePercentageError += Math.abs(error / observation);
@@ -165,5 +208,6 @@ public class Forecast
     this.meanAbsolutePercentageError = absolutePercentageError / observationCount;
     this.meanSquaredError = squaredError / observationCount;
     this.totalAbsoluteError = absoluteError;
+    this.totalSquaredError = squaredError;
   }
 }

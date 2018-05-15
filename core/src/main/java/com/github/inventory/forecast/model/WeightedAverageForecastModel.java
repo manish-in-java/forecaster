@@ -15,10 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Sample;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * <p>
@@ -138,43 +134,41 @@ public class WeightedAverageForecastModel extends ForecastModel
    * {@inheritDoc}
    */
   @Override
-  Forecast generateForecast(final Sample sample, final int projections)
+  Forecast generateForecast(final double[] observations, final int projections)
   {
-    final int observations = sample.size();
-
-    final List<Double> forecast = new ArrayList<>(observations + projections);
+    final double[] predictions = new double[observations.length + projections];
 
     // Generate predictions for the observed values.
-    for (int i = 0; i < observations; ++i)
+    for (int i = 0; i < observations.length; ++i)
     {
       if (i < weights.length - 1)
       {
         // If there aren't enough observations to weigh, ignore the observed
         // value.
-        forecast.add(0d);
+        predictions[i] = 0.0;
 
         continue;
       }
 
       // Generate a prediction as the weighted average of the current and
       // preceding observed values.
-      double prediction = 0;
+      double prediction = 0.0;
       for (int j = 0; j < weights.length; ++j)
       {
-        prediction += weights[j] * sample.get(i - j);
+        prediction += weights[j] * observations[i - j];
       }
 
-      forecast.add(prediction);
+      predictions[i] = prediction;
     }
 
     // Generate predictions beyond the observed values.
     for (int k = 0; k < projections; ++k)
     {
-      if (k + observations < weights.length)
+      if (k + observations.length < weights.length)
       {
         // If there aren't enough observations to weigh, ignore the observed
         // value.
-        forecast.add(0d);
+        predictions[observations.length + k] = 0.0;
 
         continue;
       }
@@ -188,16 +182,16 @@ public class WeightedAverageForecastModel extends ForecastModel
                                     // As long as observed values can be
                                     // pulled from the sample, keep pulling
                                     // them.
-                                    ? sample.get(observations + k - l - 1)
+                                    ? observations[observations.length + k - l - 1]
                                     // When there are no more observed values
                                     // in the sample, use past predictions.
-                                    : forecast.get(k - l));
+                                    : predictions[k - l]);
       }
 
-      forecast.add(prediction);
+      predictions[observations.length + k] = prediction;
     }
 
-    return createForecast(sample, forecast);
+    return createForecast(observations, predictions);
   }
 
   /**
@@ -207,7 +201,7 @@ public class WeightedAverageForecastModel extends ForecastModel
    * @param weights The weights to use for computing the weighted average for
    *                observed values.
    */
-  protected void setWeights(final double[] weights)
+  void setWeights(final double[] weights)
   {
     if (weights == null || weights.length < 2)
     {
