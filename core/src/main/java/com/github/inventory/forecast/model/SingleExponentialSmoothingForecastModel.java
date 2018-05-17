@@ -105,7 +105,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   private static final int                         MAX_ALPHA_OPTIMIZATION_ITERATIONS  = 100;
   private static final double                      MIN_ALPHA                          = 0.2;
 
-  private final FirstPredictionGenerationStrategy firstPredictionGenerationStrategy;
+  private final FirstPredictionGenerator firstPredictionGenerator;
 
   /**
    * Creates a model with simple average strategy for generating the first
@@ -113,40 +113,40 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    */
   public SingleExponentialSmoothingForecastModel()
   {
-    this(FirstPredictionGenerationStrategy.SIMPLE_AVERAGE);
+    this(FirstPredictionGenerator.SIMPLE_AVERAGE);
   }
 
   /**
    * Creates a model with a specified strategy for generating the first
    * prediction.
    *
-   * @param firstPredictionGenerationStrategy The strategy to use for
-   *                                          generating the first prediction.
-   *                                          This has a significant impact
-   *                                          on the model accuracy,
-   *                                          especially if a small \(\alpha\)
-   *                                          is used. It is recommended to
-   *                                          use the simple average of the
-   *                                          observations as the initial
-   *                                          predictions, which, even though
-   *                                          slightly time-consuming, it
-   *                                          likely to produce a more
-   *                                          accurate forecast.
-   * @throws NullPointerException if {@code firstPredictionGenerationStrategy}
+   * @param firstPredictionGenerator The strategy to use for
+   *                                 generating the first prediction.
+   *                                 This has a significant impact
+   *                                 on the model accuracy,
+   *                                 especially if a small \(\alpha\)
+   *                                 is used. It is recommended to
+   *                                 use the simple average of the
+   *                                 observations as the initial
+   *                                 predictions, which, even though
+   *                                 slightly time-consuming, it
+   *                                 likely to produce a more
+   *                                 accurate forecast.
+   * @throws NullPointerException if {@code firstPredictionGenerator}
    *                              is {@literal null}.
-   * @see FirstPredictionGenerationStrategy
+   * @see FirstPredictionGenerator
    */
-  SingleExponentialSmoothingForecastModel(final FirstPredictionGenerationStrategy firstPredictionGenerationStrategy)
+  SingleExponentialSmoothingForecastModel(final FirstPredictionGenerator firstPredictionGenerator)
   {
     super();
 
     // Ensure that the first prediction generation strategy is specified.
-    if (firstPredictionGenerationStrategy == null)
+    if (firstPredictionGenerator == null)
     {
       throw new NullPointerException("The strategy for generating the first prediction must be specified.");
     }
 
-    this.firstPredictionGenerationStrategy = firstPredictionGenerationStrategy;
+    this.firstPredictionGenerator = firstPredictionGenerator;
   }
 
   /**
@@ -160,14 +160,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    */
   double firstPrediction(final double[] observations)
   {
-    switch (firstPredictionGenerationStrategy)
-    {
-      case SIMPLE_AVERAGE:
-        return simpleAverage(observations);
-
-      default:
-        return observations[0];
-    }
+    return firstPredictionGenerator.predict(observations);
   }
 
   /**
@@ -216,22 +209,6 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
     return ALPHA_OPTIMIZER.optimize(optimizationModel(observations))
                           .getPoint()
                           .getEntry(0);
-  }
-
-  /**
-   * Gets the model function to use for optimizing the value of \(\alpha\),
-   * which is basically just the predicted value for each observed value. The
-   * optimization algorithm then uses the difference between the observed
-   * and corresponding predicted values to find the optimal value for
-   * \(\alpha\).
-   *
-   * @param observations The observations for which the optimal value of
-   *                     \(\alpha\) is required.
-   * @return A {@link MultivariateVectorFunction}.
-   */
-  MultivariateVectorFunction optimizationModelFunction(final double[] observations)
-  {
-    return params -> smoothenObservations(observations, params[0]);
   }
 
   /**
@@ -379,21 +356,61 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   }
 
   /**
+   * Gets the model function to use for optimizing the value of \(\alpha\),
+   * which is basically just the predicted value for each observed value. The
+   * optimization algorithm then uses the difference between the observed
+   * and corresponding predicted values to find the optimal value for
+   * \(\alpha\).
+   *
+   * @param observations The observations for which the optimal value of
+   *                     \(\alpha\) is required.
+   * @return A {@link MultivariateVectorFunction}.
+   */
+  private MultivariateVectorFunction optimizationModelFunction(final double[] observations)
+  {
+    return params -> smoothenObservations(observations, params[0]);
+  }
+
+  /**
    * Determines how the first prediction for a sample of observations should be
    * generated.
    */
-  public enum FirstPredictionGenerationStrategy
+  public enum FirstPredictionGenerator
   {
     /**
      * Uses the first observation as the first prediction. A simple and quick
      * strategy that may lead to large errors when used with a small
      * \(\alpha\).
      */
-    FIRST_OBSERVATION,
+    FIRST_OBSERVATION
+        {
+          @Override
+          double predict(final double[] observations)
+          {
+            return observations[0];
+          }
+        },
 
     /**
      * Uses the simple average of all the observations as the first prediction.
      */
     SIMPLE_AVERAGE
+        {
+          @Override
+          double predict(final double[] observations)
+          {
+            return SingleExponentialSmoothingForecastModel.simpleAverage(observations);
+          }
+        };
+
+    /**
+     * Determines the prediction corresponding to the first observation
+     * in a given collection of observations.
+     *
+     * @param observations The observations for which the prediction is
+     *                     required.
+     * @return The first prediction for the observed values.
+     */
+    abstract double predict(final double[] observations);
   }
 }

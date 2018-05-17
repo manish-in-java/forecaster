@@ -106,7 +106,7 @@ public abstract class ForecastModel
    *                     simple average is required.
    * @return The simple average for the observations.
    */
-  double simpleAverage(final double[] observations)
+  static double simpleAverage(final double[] observations)
   {
     return simpleAverage(Arrays.stream(observations).boxed().collect(Collectors.toList()));
   }
@@ -118,7 +118,7 @@ public abstract class ForecastModel
    *                     simple average is required.
    * @return The simple average for the observations.
    */
-  private double simpleAverage(final Collection<Double> observations)
+  private static double simpleAverage(final Collection<Double> observations)
   {
     return observations.stream()
                        .mapToDouble(d -> d)
