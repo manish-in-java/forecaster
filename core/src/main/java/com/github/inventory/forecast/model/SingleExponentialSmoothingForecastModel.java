@@ -123,6 +123,12 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    * Creates a model with simple average strategy for generating the first
    * prediction and a specified strategy for finding the optimal value for
    * the dampening factor \(\alpha\).
+   *
+   * @param alphaOptimizer The strategy to use for optimizing \(\alpha\) such
+   *                       that the forecast is as close to the sample as
+   *                       possible.
+   * @throws NullPointerException if {@code alphaOptimizer} is {@literal null}.
+   * @see AlphaOptimizer
    */
   private SingleExponentialSmoothingForecastModel(final AlphaOptimizer alphaOptimizer)
   {
@@ -147,6 +153,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    *                                 close to the sample as possible.
    * @throws NullPointerException if {@code firstPredictionGenerator} or
    *                              {@code alphaOptimizer} is {@literal null}.
+   * @see AlphaOptimizer
    * @see FirstPredictionGenerator
    */
   private SingleExponentialSmoothingForecastModel(final FirstPredictionGenerator firstPredictionGenerator, final AlphaOptimizer alphaOptimizer)
