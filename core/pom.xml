@@ -46,6 +46,12 @@
 
   <dependencies>
     <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-math3</artifactId>
+      <version>${commons.math.version}</version>
+    </dependency>
+
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
       <version>${junit.version}</version>
@@ -54,6 +60,7 @@
   </dependencies>
 
   <properties>
+    <commons.math.version>3.6.1</commons.math.version>
     <junit.version>4.12</junit.version>
   </properties>
 </project>

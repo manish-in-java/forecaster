@@ -21,6 +21,7 @@ import com.github.inventory.forecast.domain.Forecast;
  * Generates forecast for a sample as the weighted average of a given observed
  * value and the values of some number of its preceding values.
  * </p>
+ *
  * <p>
  * For example, given the sample {@literal [11, 9, 13, 12, 11, 10]}, and
  * weights {@literal [0.2, 0.4, 0.4]}, the forecast will be
@@ -28,6 +29,7 @@ import com.github.inventory.forecast.domain.Forecast;
  * signifies that the prediction is unavailable or undefined), as explained
  * below.
  * </p>
+ *
  * <ul>
  * <li>{@literal weighted-average (11)           = -}</li>
  * <li>{@literal weighted-average (11, 9)        = -}</li>
@@ -37,29 +39,34 @@ import com.github.inventory.forecast.domain.Forecast;
  * <li>{@literal weighted-average (12, 11, 10)   = 12*0.2 + 11*0.4 + 10*0.4   = 10.8}</li>
  * <li>{@literal weighted-average (11, 10, 10.8) = 11*0.2 + 10*0.4 + 10.8*0.4 = 10.52}</li>
  * </ul>
+ *
  * <p>
  * The first two predictions are undefined because there are three weights,
  * which require three observations to calculate the weighted average, but
  * since there are fewer than the required three observations for the first
  * two, the weighted average cannot be calculated.
  * </p>
+ *
  * <p>
  * Given that more recent observations should in general be a better
  * indication of future trends, a weighted-average forecast generated
  * using higher weights assigned to more recent observations is able to
  * track the direction of change in the underlying data.
  * </p>
+ *
  * <p>
  * Other advantages of the model include suppression of random fluctuations
  * that could otherwise lead to much higher inventory holding costs, and
  * amplification of long-term trends.
  * </p>
+ *
  * <p>
  * The disadvantages of the weighted average model are that a minimum number
  * of observations (equal to the number of weights) must be available for a
  * forecast to be generated, and it is computationally more intensive than the
  * simple average model.
  * </p>
+ *
  * <p>
  * Another disadvantage of the model, given that it suppresses fluctuations,
  * is that it disregards anticipated fluctuations, on account of say,
@@ -78,12 +85,14 @@ public class WeightedAverageForecastModel extends ForecastModel
    * <p>
    * Creates a new weighted average forecast model using the specified weights.
    * </p>
+   *
    * <p>
    * The number of weights provided determines the number of observations from
    * the sample over which the weighted average needs to be computed. For
    * example, if four weights are provided, the weighted average is computed
    * over groups of four observations at a time.
    * </p>
+   *
    * <p>
    * The number of weights affects the number of predictions that can be made
    * for a given sample of observations. For example, if five weights are used
@@ -92,12 +101,14 @@ public class WeightedAverageForecastModel extends ForecastModel
    * to be calculated. For this reason, the model works best when the weights
    * are assigned judiciously, based on the sample size.
    * </p>
+   *
    * <p>
    * Although standard descriptions of the weighted average model use weights
    * adding up to {@literal one (1)}, the same restriction is not applicable
    * here. The assigned weights are automatically flattened out in the ratio
    * determined by the individual weights.
    * </p>
+   *
    * <p>
    * Weights should be provided in descending order of precedence. This means
    * the first weight will be assigned to the most recent observation, the
@@ -134,7 +145,7 @@ public class WeightedAverageForecastModel extends ForecastModel
    * {@inheritDoc}
    */
   @Override
-  Forecast generateForecast(final double[] observations, final int projections)
+  Forecast forecast(final double[] observations, final int projections)
   {
     final double[] predictions = new double[observations.length + projections];
 
@@ -191,7 +202,7 @@ public class WeightedAverageForecastModel extends ForecastModel
       predictions[observations.length + k] = prediction;
     }
 
-    return createForecast(observations, predictions);
+    return forecast(observations, predictions);
   }
 
   /**

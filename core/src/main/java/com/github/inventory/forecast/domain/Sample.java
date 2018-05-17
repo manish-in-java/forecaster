@@ -23,6 +23,7 @@ import java.util.Arrays;
  * is sensitive to the chronological ordering of the observations, may produce
  * an inaccurate forecast if the observations are out of order.
  * </p>
+ *
  * <p>
  * This class is thread-safe.
  * </p>
@@ -60,8 +61,9 @@ public class Sample
   /**
    * Gets the observations included in the sample.
    *
-   * @return A copy of the observations included in the sample. This ensures
-   * that the actual sample, once generated, cannot be changed from outside.
+   * @return A copy of the observations included in the sample. This is to
+   * ensure that the actual sample, once generated, cannot be changed from
+   * outside.
    */
   public double[] getObservations()
   {

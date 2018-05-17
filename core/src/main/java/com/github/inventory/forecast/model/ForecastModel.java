@@ -64,7 +64,7 @@ public abstract class ForecastModel
       return null;
     }
 
-    return generateForecast(sample.getObservations(), Math.max(0, projections));
+    return forecast(sample.getObservations(), Math.max(0, projections));
   }
 
   /**
@@ -76,21 +76,9 @@ public abstract class ForecastModel
    * @param predictions  The predictions to include in the forecast.
    * @return A {@link Forecast}.
    */
-  Forecast createForecast(final double[] observations, final double[] predictions)
+  Forecast forecast(final double[] observations, final double[] predictions)
   {
     return new Forecast(observations, predictions);
-  }
-
-  /**
-   * Gets the simple average for an array of observations.
-   *
-   * @param observations The array of observations for which the
-   *                     simple average is required.
-   * @return The simple average for the observations.
-   */
-  double getSimpleAverage(final double[] observations)
-  {
-    return getSimpleAverage(Arrays.stream(observations).boxed().collect(Collectors.toList()));
   }
 
   /**
@@ -109,7 +97,19 @@ public abstract class ForecastModel
    *                     {@literal 4} additional beyond the sample set.
    * @return A {@link Forecast}.
    */
-  abstract Forecast generateForecast(final double[] observations, final int projections);
+  abstract Forecast forecast(final double[] observations, final int projections);
+
+  /**
+   * Gets the simple average for an array of observations.
+   *
+   * @param observations The array of observations for which the
+   *                     simple average is required.
+   * @return The simple average for the observations.
+   */
+  double simpleAverage(final double[] observations)
+  {
+    return simpleAverage(Arrays.stream(observations).boxed().collect(Collectors.toList()));
+  }
 
   /**
    * Gets the simple average for a collection of observations.
@@ -118,7 +118,7 @@ public abstract class ForecastModel
    *                     simple average is required.
    * @return The simple average for the observations.
    */
-  private double getSimpleAverage(final Collection<Double> observations)
+  private double simpleAverage(final Collection<Double> observations)
   {
     return observations.stream()
                        .mapToDouble(d -> d)

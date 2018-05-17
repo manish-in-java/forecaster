@@ -19,6 +19,7 @@ package com.github.inventory.forecast.model;
  * Generates a forecast for a sample as the average of successive smaller
  * groups of observations in the sample.
  * </p>
+ *
  * <p>
  * For example, given the sample {@literal [11, 9, 13, 12, 11, 10]}, and
  * a group size of {@literal 4}, the forecast will be
@@ -26,6 +27,7 @@ package com.github.inventory.forecast.model;
  * signifies that the prediction is unavailable or undefined), as explained
  * below.
  * </p>
+ *
  * <ul>
  * <li>{@literal moving-average (11)               = -}</li>
  * <li>{@literal moving-average (11, 9)            = -}</li>
@@ -35,11 +37,13 @@ package com.github.inventory.forecast.model;
  * <li>{@literal moving-average (13, 12, 11, 10)   = 11.5}</li>
  * <li>{@literal moving-average (12, 11, 10, 11.5) = 11.125}</li>
  * </ul>
+ *
  * <p>
  * The first three predictions are undefined because each group requires
  * {@literal 4} observations, but since there are fewer than the required
  * observations for the first three, the average cannot be calculated.
  * </p>
+ *
  * <p>
  * This model is a special case of the {@link WeightedAverageForecastModel},
  * such that all observations in a group have equal weight. Due to this

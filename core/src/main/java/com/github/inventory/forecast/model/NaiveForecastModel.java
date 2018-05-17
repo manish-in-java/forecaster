@@ -21,20 +21,23 @@ import com.github.inventory.forecast.domain.Forecast;
  * Generates forecast for a sample by using the previous observation as the
  * next prediction.
  * </p>
+ *
  * <p>
  * For example, given the sample {@literal [11, 9, 13, 12, 11, 10]}, the
  * forecast will be {@literal [-, 11, 9, 13, 12, 11, 10]}, where {@literal "-"}
  * signifies that the prediction is unavailable or undefined.
  * </p>
+ *
  * <p>
- * This model simply says {@literal what happened last time will happen again}.
- * This strategy makes this model very cheap, as no computation. Given the way
- * this model generates predictions, it is mostly used as a baseline to compare
- * accuracy of other forecast models. It is best suited for scenarios where
- * the trend is mostly flat and there are no fluctuations in the sample data.
- * When the sample data fluctuates up or down, with some underlying trend,
- * this model may produce unusable predictions, since it does not take any
- * trends into account.
+ * This model simply says {@literal "what happened last time will happen
+ * again"}. This strategy makes this model very cheap, as no computation is
+ * required to generate a prediction. Given the way this model generates
+ * predictions, it is mostly used as a baseline to compare accuracy of other
+ * forecast models. It is best suited for scenarios where the trend is mostly
+ * flat and there are no fluctuations in the sample data. When the sample
+ * data fluctuates up or down, with some underlying trend, this model may
+ * produce unusable predictions, since it does not take any trends into
+ * account.
  * </p>
  */
 public class NaiveForecastModel extends ForecastModel
@@ -43,7 +46,7 @@ public class NaiveForecastModel extends ForecastModel
    * {@inheritDoc}
    */
   @Override
-  Forecast generateForecast(final double[] observations, final int projections)
+  Forecast forecast(final double[] observations, final int projections)
   {
     final double[] predictions = new double[observations.length + projections];
 
@@ -63,10 +66,11 @@ public class NaiveForecastModel extends ForecastModel
     // Add specified number of predictions beyond the sample.
     for (int j = 0; j < projections - 1; ++j)
     {
-      // Add the prediction to the forecast.
+      // Add the very last prediction generated from the observations to
+      // the forecast.
       predictions[i++] = prediction;
     }
 
-    return createForecast(observations, predictions);
+    return forecast(observations, predictions);
   }
 }

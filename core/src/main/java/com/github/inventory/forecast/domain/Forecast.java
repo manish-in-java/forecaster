@@ -23,6 +23,7 @@ import java.util.Arrays;
  * Represents a collection of predictions. A forecast is generated on a
  * {@link Sample} of observations by applying a {@link ForecastModel}.
  * </p>
+ *
  * <p>
  * The applied {@link ForecastModel} generates a prediction for every
  * single observation in the {@link Sample}. Since observations are
@@ -31,6 +32,7 @@ import java.util.Arrays;
  * value. In addition to predictions for each observation, forecast models
  * also generate a specified number of additional predictions.
  * </p>
+ *
  * <p>
  * Each forecast also contains a number of measures that allow the forecast
  * accuracy to be expressed quantitatively. These measures show how much the
@@ -38,6 +40,7 @@ import java.util.Arrays;
  * determine the relative efficacy of different forecast models with the same
  * sample data.
  * </p>
+ *
  * <p>
  * This class is thread-safe.
  * </p>
@@ -61,7 +64,7 @@ public class Forecast
    * @throws NullPointerException     if {@code observations} or
    *                                  {@code predictions} is {@literal null}.
    * @throws IllegalArgumentException if  {@code observations} or
-   *                                  *                                  {@code predictions} is empty.
+   *                                  {@code predictions} is empty.
    */
   public Forecast(final double[] observations, final double[] predictions)
   {
@@ -143,8 +146,9 @@ public class Forecast
   /**
    * Gets the predictions included in the forecast.
    *
-   * @return A copy of the predictions included in the forecast. This ensures
-   * that the actual forecast, once generated, cannot be changed from outside.
+   * @return A copy of the predictions included in the forecast. This is to
+   * ensure that the actual forecast, once generated, cannot be changed from
+   * outside.
    */
   public double[] getPredictions()
   {

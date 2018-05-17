@@ -79,11 +79,15 @@ public class ForecastController
    */
   private enum ForecastModelEnum
   {
+    EXPONENTIAL_WEIGHTED_MOVING_AVERAGE(new ExponentialWeightedMovingAverageForecastModel()),
+
     NAIVE(new NaiveForecastModel()),
 
-    SINGLE_MOVING_AVERAGE(new SingleMovingAverageForecastModel(3)),
-
     SIMPLE_AVERAGE(new SimpleAverageForecastModel()),
+
+    SINGLE_EXPONENTIAL_SMOOTHING(new SingleExponentialSmoothingForecastModel()),
+
+    SINGLE_MOVING_AVERAGE(new SingleMovingAverageForecastModel(3)),
 
     WEIGHTED_AVERAGE(new WeightedAverageForecastModel(new double[] { 4, 3, 2, 1 }));
 
