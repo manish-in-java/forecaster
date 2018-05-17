@@ -120,23 +120,20 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    * Creates a model with a specified strategy for generating the first
    * prediction.
    *
-   * @param firstPredictionGenerator The strategy to use for
-   *                                 generating the first prediction.
-   *                                 This has a significant impact
-   *                                 on the model accuracy,
-   *                                 especially if a small \(\alpha\)
-   *                                 is used. It is recommended to
-   *                                 use the simple average of the
-   *                                 observations as the initial
-   *                                 predictions, which, even though
-   *                                 slightly time-consuming, it
-   *                                 likely to produce a more
-   *                                 accurate forecast.
+   * @param firstPredictionGenerator The strategy to use for generating the
+   *                                 first prediction. This has a significant
+   *                                 impact on the model accuracy, especially
+   *                                 if a small \(\alpha\) is used. It is
+   *                                 recommended to use the simple average of
+   *                                 the observations as the initial
+   *                                 prediction, which, even though slightly
+   *                                 time-consuming, is likely to produce a
+   *                                 more accurate forecast.
    * @throws NullPointerException if {@code firstPredictionGenerator}
    *                              is {@literal null}.
    * @see FirstPredictionGenerator
    */
-  SingleExponentialSmoothingForecastModel(final FirstPredictionGenerator firstPredictionGenerator)
+  private SingleExponentialSmoothingForecastModel(final FirstPredictionGenerator firstPredictionGenerator)
   {
     super();
 
