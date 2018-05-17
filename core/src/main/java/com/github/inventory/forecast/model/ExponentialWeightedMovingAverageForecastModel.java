@@ -15,7 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
-import org.apache.commons.math3.analysis.MultivariateMatrixFunction;
 
 import java.util.Arrays;
 
@@ -91,6 +90,23 @@ import java.util.Arrays;
 public class ExponentialWeightedMovingAverageForecastModel extends SingleExponentialSmoothingForecastModel
 {
   /**
+   * Creates a baseline of a collection of observations. The baseline is
+   * used to generate predictions for the observations, as well as fine-tune
+   * the model to produce optimal predictions.
+   *
+   * @param observations A collection of observations.
+   * @return A baseline version of the observations.
+   */
+  @Override
+  double[] baselineObservations(final double[] observations)
+  {
+    // In Roberts' model, each observation is its own baseline, that is to say,
+    // the prediction for each observation is directly dependent upon that
+    // observation itself.
+    return observations;
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -116,98 +132,5 @@ public class ExponentialWeightedMovingAverageForecastModel extends SingleExponen
     }
 
     return forecast(observations, predictions);
-  }
-
-  /**
-   * <p>
-   * Gets the {@literal Jacobian} corresponding to the model function used
-   * for optimizing the value of \(\alpha\).
-   * </p>
-   * <p>
-   * The {@literal Jacobian} (\(J\)) for a function \(S\) of \(k\) parameters
-   * \(x_k\) is a matrix such that an element \(J_{ik}\) of the matrix is
-   * given by \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), where \(x_k\)
-   * are the \(k\) parameters on which the function \(S\) is dependent, and
-   * \(S_i\) are the values of the function \(S\) at \(i\) distinct points. For
-   * a function \(S\) that is differentiable with respect to \(x_k\), the
-   * {@literal Jacobian} (\(J\)) is a good linear approximation of the
-   * geometric shape of the function \(S\) in the immediate vicinity of each
-   * \(x_k\). This allows it to be used as a sort of derivative for the
-   * function \(S\), wherever a derivative is required to determine the
-   * slope of the function at any given point.
-   * </p>
-   * <p>
-   * In the case of single exponential smoothing forecast models, there is
-   * only one parameter \(\alpha\), since the predicted values only depend
-   * on this one parameter. Therefore, the {@literal Jacobian} (\(J\))
-   * depends on only this one parameter \(\alpha\). Therefore, (\(J\))
-   * reduces to \(J_{i} = \frac{\partial S_i}{\partial \alpha}\) (\(k = 1\)).
-   * </p>
-   * <p>
-   * For {@literal EWMA}, the function \(S\) is defined as
-   * </p>
-   * <p>
-   * <br>
-   * \(S_i = S_{i-1} + \alpha(O_i - S_{i-1})\)
-   * <br>
-   * </p>
-   * <p>
-   * therefore, \(J_{i} = \frac{\partial S_i}{\partial \alpha}\) reduces to
-   * \(J_{i} = O_i - S_{i-1}\).
-   * </p>
-   *
-   * @param observations The observations for which the optimal value of
-   *                     \(\alpha\) is required.
-   * @return A {@link MultivariateMatrixFunction}.
-   * @see <a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian matrix</a>
-   */
-  @Override
-  MultivariateMatrixFunction optimizationModelJacobian(final double[] observations)
-  {
-    return params -> {
-      // Smoothen the observations.
-      final double[] smoothed = smoothenObservations(observations, params[0]);
-
-      final double[][] jacobian = new double[observations.length][1];
-
-      // The first element of the Jacobian is simply the first observation,
-      // since there is no prior prediction for it.
-      jacobian[0][0] = observations[0];
-
-      // Calculate the rest of the Jacobian using the current observation
-      // and the immediately previous prediction.
-      for (int i = 1; i < jacobian.length; ++i)
-      {
-        jacobian[i][0] = observations[i] - smoothed[i - 1];
-      }
-
-      return jacobian;
-    };
-  }
-
-  /**
-   * Smoothens a collection of observations by exponentially smoothing them
-   * using a dampening factor \(\alpha\), using each observation to generate
-   * its corresponding (instead of next) prediction.
-   *
-   * @param observations The observations to smoothen.
-   * @param alpha        The dampening factor \(\alpha\).
-   * @return Smoothened observations.
-   */
-  @Override
-  double[] smoothenObservations(final double[] observations, final double alpha)
-  {
-    final double[] smoothed = new double[observations.length];
-
-    // Generate the first smooth observation using a specific strategy.
-    smoothed[0] = firstPrediction(observations);
-
-    // Generate the rest using the smoothing formula.
-    for (int i = 1; i < observations.length; ++i)
-    {
-      smoothed[i] = alpha * observations[i] + (1 - alpha) * smoothed[i - 1];
-    }
-
-    return smoothed;
   }
 }
