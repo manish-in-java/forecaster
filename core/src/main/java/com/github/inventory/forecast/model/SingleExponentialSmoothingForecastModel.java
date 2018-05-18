@@ -343,14 +343,17 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      * For the single exponential smoothing model, the function \(S\) is
      * defined as (see above)
      * </p>
+     *
      * <p>
      * <br>
      * \(S_i = S_{i-1} + \alpha(O - S_{i-1})\)
      * <br>
      * </p>
+     *
      * <p>
      * where, \(O\) is some observation or group of observations. Therefore,
      * </p>
+     *
      * <p>
      * <br>
      * \(J_i = \frac{\partial S_i}{\partial \alpha}\) reduces to
@@ -371,12 +374,14 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      * <br>
      * \(J_i = O - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}\)
      * </p>
+     *
      * <p>
      * Since, \(S_{i-1}\) may be dependent upon \(\alpha\), this formula
      * needs to be evaluated for each \(S_i\) to calculate the correct
      * \(J_i\). However, it becomes a recursive procedure, as can be seen
      * below.
      * </p>
+     *
      * <p>
      * <br>
      * \(J_1 = \frac{\partial S_1}{\partial \alpha} = 0\), since \(S_1\) is
