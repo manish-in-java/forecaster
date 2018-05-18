@@ -147,6 +147,9 @@
       <id>java-8</id>
       <properties>
         <java.version>1.8</java.version>
+
+        <javadoc.options>-header &apos;&lt;script src=&quot;http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot;&gt;&lt;/script&gt;&apos;
+        </javadoc.options>
       </properties>
     </profile>
 
@@ -157,6 +160,8 @@
       <id>java-9</id>
       <properties>
         <java.version>9</java.version>
+
+        <javadoc.options>--allow-script-in-comments -html5 -header &apos;&lt;script src=&quot;http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot;&gt;&lt;/script&gt;&apos;</javadoc.options>
       </properties>
     </profile>
 
@@ -167,6 +172,8 @@
       <id>java-10</id>
       <properties>
         <java.version>10</java.version>
+
+        <javadoc.options>--allow-script-in-comments -html5 -header &apos;&lt;script src=&quot;http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML&quot;&gt;&lt;/script&gt;&apos;</javadoc.options>
       </properties>
     </profile>
   </profiles>
