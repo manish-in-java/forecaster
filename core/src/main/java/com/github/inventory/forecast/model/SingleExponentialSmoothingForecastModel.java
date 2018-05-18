@@ -52,7 +52,7 @@ import java.util.function.Function;
  * <p>
  * where, \(i\) is an index that ranges from {@literal 1} to the number of
  * observations in the sample, \(O_i\) is the {@literal i-th} observation,
- * \(S_i\) its smooth version, and \(\alpha\) is a dampening factor between
+ * \(S_i\) its smooth version, and \(\alpha\) is an exponent between
  * \(0\) and \(1\) responsible for smoothing out the observations. This means
  * </p>
  *
@@ -77,7 +77,7 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * Smoothing utilizes a dampening factor \(\alpha\), that continually decreases
+ * Smoothing utilizes an exponent \(\alpha\), that continually decreases
  * the effect of observations farther in the past. The model starts with an
  * initial value of \(\alpha\) (which is usually guessed) but determines
  * the optimal value for the factor that approximates the sample as closely as
@@ -111,7 +111,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   /**
    * Creates a model with simple average strategy for generating the first
    * prediction and a {@literal non-linear least-squares} optimization for
-   * finding the optimal value for the dampening factor \(\alpha\) such
+   * finding the optimal value for the exponent \(\alpha\) such
    * that the resultant forecast is as close to the sample as possible.
    */
   public SingleExponentialSmoothingForecastModel()
@@ -122,7 +122,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   /**
    * Creates a model with simple average strategy for generating the first
    * prediction and a specified strategy for finding the optimal value for
-   * the dampening factor \(\alpha\).
+   * the exponent \(\alpha\).
    *
    * @param alphaOptimizer The strategy to use for optimizing \(\alpha\) such
    *                       that the forecast is as close to the sample as
@@ -228,7 +228,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   }
 
   /**
-   * Gets the optimal value for the dampening factor \(\alpha\) for a set of
+   * Gets the optimal value for the exponent \(\alpha\) for a set of
    * observations.
    *
    * @param observations The observations for which \(\alpha\) is required.
@@ -246,7 +246,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    * (instead of corresponding) prediction.
    *
    * @param observations The observations to smoothen.
-   * @param alpha        The dampening factor \(\alpha\).
+   * @param alpha        The exponent \(\alpha\).
    * @return Smoothened observations.
    */
   double[] smoothenObservations(final double[] observations, final double alpha)
@@ -284,16 +284,117 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   }
 
   /**
-   * Determines how the dampening factor \(\alpha\) is optimized such that
+   * Determines how the exponent \(\alpha\) is optimized such that
    * the resultant forecast is as close to the sample as possible.
    */
   public enum AlphaOptimizer
   {
     /**
-     * Optimizes the value for the dampening factor \(\alpha\) for a set of
-     * observations using the {@literal Levenberg-Marquardt (LM)} algorithm.
+     * <p>
+     * Optimizes the value for the exponent \(\alpha\) for a set of
+     * observations using the {@literal Levenberg-Marquardt (LM)} algorithm,
+     * which is a non-linear least-squares curve-fitting algorithm. This
+     * algorithm generates predictions for the given observations, starting
+     * with an initial guess for the exponent \(\alpha\), and iteratively
+     * changing the exponent value until one is found that minimizes the
+     * {@literal sum-squared-error (MSE)} for the observations. The
+     * optimization algorithm requires the following input:
+     * </p>
+     *
+     * <ol>
+     * <li>The observations for which \(\alpha\) needs to be optimized;</li>
+     * <li>An initial guess for \(\alpha\);</li>
+     * <li>A function that can take the observations and some value for
+     * \(\alpha\), and produce predictions for each of the observations.
+     * This is known as the model function for the algorithm. The algorithm
+     * internally calculates the MSE for each value of \(\alpha\) by using
+     * the given observations and their corresponding predictions for the
+     * specified value of \(\alpha\);</li>
+     * <li>A function that can take the observations and some value for
+     * \(\alpha\), and produce a <i>Jacobian</i> for each prediction
+     * made by the model function. The <i>Jacobian</i> is a linear
+     * approximation of the derivative of a predicted value with respect
+     * to the variable parameter \(\alpha\) and hence serves to determine
+     * whether the trend at each predicted value matches that of the
+     * corresponding observed value. This information is critical in optimizing
+     * the value of \(\alpha\) as the derivative determines whether the
+     * value of \(\alpha\) is too high or too low, and therefore whether
+     * it needs to be lowered or raised;</li>
+     * <li>A function that can validate whether a specific value of
+     * \(\alpha\) is within the bounds of the problem-space. For the
+     * purposes of exponential smoothing, \(\alpha\) must be between
+     * {@literal 0.1} and {@literal 0.9}.</li>
+     * </ol>
+     *
+     * <p>
+     * The <i>Jacobian</i> (\(J\)) for a function \(S\) of \(k\) parameters
+     * \(x_k\) is a matrix, where an element \(J_{ik}\) of the matrix is
+     * given by \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), \(x_k\) are
+     * the \(k\) parameters on which the function \(S\) is dependent, and
+     * \(S_i\) are the values of the function \(S\) at \(i\) distinct points.
+     * In the case of single exponential smoothing forecast models, there
+     * is only one parameter \(\alpha\) that impacts the predicted value for
+     * a given observed values. Therefore, the <i>Jacobian</i> (\(J\)) depends
+     * on only this one parameter \(\alpha\) and thereby reduces to
+     * \(J_i = \frac{\partial S_i}{\partial \alpha}\).
+     * </p>
+     *
+     * <p>
+     * For the single exponential smoothing model, the function \(S\) is
+     * defined as (see above)
+     * </p>
+     * <p>
+     * <br>
+     * \(S_i = S_{i-1} + \alpha(O - S_{i-1})\)
+     * <br>
+     * </p>
+     * <p>
+     * where, \(O\) is some observation or group of observations. Therefore,
+     * </p>
+     * <p>
+     * <br>
+     * \(J_i = \frac{\partial S_i}{\partial \alpha}\) reduces to
+     * <br>
+     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
+     * + \alpha{\frac{\partial O}{\partial \alpha}}
+     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
+     * + O{\frac{\partial \alpha}{\partial \alpha}}
+     * - S_{i-1}{\frac{\partial \alpha}{\partial \alpha}}\), or
+     * <br>
+     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
+     * + 0
+     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
+     * + O
+     * - S_{i-1}\) (since \(O\) does not depend on \(\alpha\),
+     * and therefore its derivative with respect to \(\alpha\) is
+     * {@literal zero}, or
+     * <br>
+     * \(J_i = O - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}\)
+     * </p>
+     * <p>
+     * Since, \(S_{i-1}\) may be dependent upon \(\alpha\), this formula
+     * needs to be evaluated for each \(S_i\) to calculate the correct
+     * \(J_i\). However, it becomes a recursive procedure, as can be seen
+     * below.
+     * </p>
+     * <p>
+     * <br>
+     * \(J_1 = \frac{\partial S_1}{\partial \alpha} = 0\), since \(S_1\) is
+     * not dependent upon \(\alpha\)
+     * <br>
+     * \(J_2 = \frac{\partial S_2}{\partial \alpha} = O - S_1 + (1 - \alpha)\frac{\partial S_1}{\partial \alpha}\)
+     * <br>
+     * \(J_3 = \frac{\partial S_3}{\partial \alpha} = O - S_2 + (1 - \alpha)\frac{\partial S_2}{\partial \alpha}\)
+     * <br>
+     * \(J_4 = \frac{\partial S_4}{\partial \alpha} = O - S_3 + (1 - \alpha)\frac{\partial S_3}{\partial \alpha}\)
+     * <br><br>
+     * and so on.
+     * </p>
      *
      * @see <a href="https://en.wikipedia.org/wiki/Levenberg-Marquardt_algorithm">Levenberg-Marquardt algorithm</a>
+     * @see <a href="https://en.wikipedia.org/wiki/Least_squares">Least squares</a>
+     * @see <a href="https://en.wikipedia.org/wiki/Curve_fitting">Curve fitting</a>
+     * @see <a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian matrix</a>
      */
     LEAST_SQUARES
         {
@@ -315,10 +416,10 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
           /**
            * Converts a collection of observations into a
            * {@literal least-squares curve-fitting problem} using an initial
-           * value of the dampening factor \(\alpha\). The dampening factor is
-           * used for exponential smoothing so that the resultant problem can
-           * be fed to a curve-fitting algorithm for finding the optimal value
-           * of \(\alpha\).
+           * value of the exponent \(\alpha\). The exponent is used for
+           * exponential smoothing so that the resultant problem can be fed
+           * to a curve-fitting algorithm for finding the optimal value of
+           * \(\alpha\).
            *
            * @param observations The observations to convert to a least-squares
            *                     curve-fitting problem.
@@ -369,60 +470,8 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
           }
 
           /**
-           * <p>
-           * Gets the {@literal Jacobian} corresponding to the model function
+           * Gets the <i>Jacobian</i> corresponding to the model function
            * used for optimizing the value of \(\alpha\).
-           * </p>
-           *
-           * <p>
-           * The {@literal Jacobian} (\(J\)) for a function \(S\) of \(k\)
-           * parameters \(x_k\) is a matrix such that an element \(J_{ik}\) of
-           * the matrix is given by
-           * \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), where \(x_k\)
-           * are the \(k\) parameters on which the function \(S\) is dependent,
-           * and \(S_i\) are the values of the function \(S\) at \(i\) distinct
-           * points. For a function \(S\) that is differentiable with respect
-           * to \(x_k\) at each point \(i\), the {@literal Jacobian} (\(J\)) is
-           * a good linear approximation of the geometric shape of the function
-           * \(S\) in the immediate vicinity of each \(x_k\). This allows it to
-           * be used as a sort of derivative for the function \(S\), wherever a
-           * derivative is required to determine the slope of the function at
-           * any given point. The slope in turn determines whether the function
-           * is ascending or descending at any given point, and helps the
-           * optimization process choose a direction in which to change the
-           * value of \(\alpha\) so that its optimal value can be found as
-           * quickly as possible.
-           * </p>
-           *
-           * <p>
-           * In the case of single exponential smoothing forecast models, there
-           * is only one parameter \(\alpha\), since the predicted values only
-           * depend on this one parameter. Therefore, the {@literal Jacobian}
-           * (\(J\)) depends on only this one parameter \(\alpha\). Therefore,
-           * (\(J\)) reduces to \(J_{i} = \frac{\partial S_i}{\partial \alpha}\)
-           * (\(k = 1\)).
-           * </p>
-           *
-           * <p>
-           * For the single exponential smoothing model, the function \(S\) is
-           * defined as (see above)
-           * </p>
-           * <p>
-           * <br>
-           * \(S_i = S_{i-1} + \alphaD\)
-           * <br>
-           * </p>
-           * <p>
-           * where, \(D\) is dependent upon some observation and the previous
-           * value \(S_{i-1}), therefore,
-           * \(J_{i} = \frac{\partial S_i}{\partial \alpha}\) reduces to
-           * \(J_{i} = \frac{\partial S_{i-1}}{\partial \alpha} + \alpha{\frac{\partial D}{\partial \alpha}} + D\frac{\partial \alpha}{\partial \alpha}\).
-           * </p>
-           * <p>
-           * Since, \(S_{i-1}\) may be dependent upon \(\alpha\), this formula
-           * needs to be evaluated for each \(S_i\) to calculate the correct
-           * \(J_i\).
-           * </p>
            *
            * @param observations The observations for which the optimal value of
            *                     \(\alpha\) is required.
@@ -437,7 +486,6 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
            *                         observations during the optimization
            *                         process.
            * @return A {@link MultivariateMatrixFunction}.
-           * @see <a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian matrix</a>
            */
           private MultivariateMatrixFunction optimizationModelJacobian(final double[] observations
               , final Function<double[], double[]> baselineFunction
@@ -480,7 +528,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      *
      * @return A {@link ParameterValidator}.
      */
-    protected ParameterValidator alphaValidator()
+    protected final ParameterValidator alphaValidator()
     {
       return points -> {
         final double alpha = points.getEntry(0);
@@ -499,7 +547,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
     }
 
     /**
-     * Finds the optimal value for the dampening factor \(\alpha\) for a
+     * Finds the optimal value for the exponent \(\alpha\) for a
      * collection of observations, such that the value can be used to
      * generate a forecast that is as close to the sample as possible.
      *
