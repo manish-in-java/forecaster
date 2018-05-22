@@ -16,6 +16,8 @@ package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
 
+import java.util.Arrays;
+
 /**
  * <p>
  * Generates forecast for a sample as the weighted average of a given observed
@@ -206,13 +208,25 @@ public class WeightedAverageForecastModel extends ForecastModel
   }
 
   /**
+   * Gets the weights to use for computing the weighted average for observed
+   * values.
+   *
+   * @return The weights to use for computing the weighted average for observed
+   * values.
+   */
+  final double[] getWeights()
+  {
+    return Arrays.copyOf(weights, weights.length);
+  }
+
+  /**
    * Sets the weights to use for computing the weighted average for observed
    * values.
    *
    * @param weights The weights to use for computing the weighted average for
    *                observed values.
    */
-  void setWeights(final double[] weights)
+  final void setWeights(final double[] weights)
   {
     if (weights == null || weights.length < 2)
     {

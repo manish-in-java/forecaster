@@ -35,8 +35,59 @@ public class WeightedAverageForecastModelTest extends ForecastModelTest
   @BeforeClass
   public static void setup()
   {
-    WEIGHTS = new double[] { 4, 3, 2, 1 };
+    WEIGHTS = new double[] { 0.4, 0.3, 0.2, 0.1 };
     MODEL = new WeightedAverageForecastModel(WEIGHTS);
+  }
+
+  /**
+   * Tests that a weighted average forecast model can be created with
+   * weights whose sum exceeds {@literal one}.
+   */
+  @Test
+  public void testConstructWithDenormalizedWeights()
+  {
+    final WeightedAverageForecastModel subject = new WeightedAverageForecastModel(new double[] { 1.0, 2.0, 4.0, 8.0 });
+
+    final double[] weights = subject.getWeights();
+
+    assertNotNull(weights);
+    assertEquals(4, weights.length);
+    for (final double weight : weights)
+    {
+      assertTrue(weight < 1.0);
+    }
+  }
+
+  /**
+   * Tests that a weighted average forecast model can be created with a
+   * single weight.
+   */
+  @Test
+  public void testConstructWithSingleWeight()
+  {
+    final WeightedAverageForecastModel subject = new WeightedAverageForecastModel(new double[] { getDouble() });
+
+    final double[] weights = subject.getWeights();
+
+    assertNotNull(weights);
+    assertEquals(1, weights.length);
+    assertEquals(1.0, weights[0], 0.0);
+  }
+
+  /**
+   * Tests that a weighted average forecast model can be created without
+   * specifying the weights and that doing so sets a fixed weight.
+   */
+  @Test
+  public void testConstructWithoutWeights()
+  {
+    final WeightedAverageForecastModel subject = new WeightedAverageForecastModel(null);
+
+    final double[] weights = subject.getWeights();
+
+    assertNotNull(weights);
+    assertEquals(1, weights.length);
+    assertEquals(1.0, weights[0], 0.0);
   }
 
   /**
@@ -84,6 +135,35 @@ public class WeightedAverageForecastModelTest extends ForecastModelTest
     assertNotEquals(0.0, subject.getMeanSquaredError());
     assertNotEquals(0.0, subject.getTotalAbsoluteError());
     assertNotEquals(0.0, subject.getTotalSquaredError());
+  }
+
+  /**
+   * Tests that when observations are fewer than the weights, the model
+   * skips observations until there are sufficient enough to generate a
+   * prediction.
+   */
+  @Test
+  public void testForecastWithExtraWeights()
+  {
+    // Use a large number of weights.
+    final double[] weights = new double[] { 0.1, 0.2, 0.3, 0.4 };
+
+    final WeightedAverageForecastModel model = new WeightedAverageForecastModel(weights);
+
+    // Use fewer observations than the available weights.
+    final double[] observations = new double[] { getDouble(), getDouble() };
+
+    // Generate a forecast using the known weights and observations.
+    final Forecast forecast = model.forecast(new Sample(observations));
+
+    final double[] predictions = forecast.getPredictions();
+
+    assertNotNull(predictions);
+    assertEquals(observations.length + 1, predictions.length);
+    for (int i = 0; i < observations.length; ++i)
+    {
+      assertEquals(0.0, predictions[i], 0.0);
+    }
   }
 
   /**
