@@ -359,7 +359,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
               , double[]> baselineFunction
               , final BiFunction<double[], Double, double[]> smoothingFunction)
           {
-            return ALPHA_OPTIMIZER.optimize(optimizationModelFunction(observations, smoothingFunction)
+            return ALPHA_OPTIMIZER.optimize(optimizationModelFunction(observations, baselineFunction, smoothingFunction)
                 , optimizationFunctionGradient(observations, baselineFunction, smoothingFunction)
                 , GoalType.MINIMIZE
                 , new InitialGuess(new double[] { INITIAL_ALPHA })
@@ -374,16 +374,15 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
            *
            * @param observations      The observations for which the optimal value of
            *                          \(\alpha\) is required.
-           * @param smoothingFunction A function to use for smoothing the
-           *                          observations during the optimization
-           *                          process.
            * @param baselineFunction  A function that prepares a baseline for
            *                          the observations. The baseline in turn is
            *                          used to generate predictions for the
            *                          observations and also to optimize the
            *                          value of \(\alpha\) through an iterative
-           *                          process that attempts to solve the
-           *                          least-squares problem.
+           *                          process.
+           * @param smoothingFunction A function to use for smoothing the
+           *                          observations during the optimization
+           *                          process.
            * @return An {@link ObjectiveFunction}.
            */
           private ObjectiveFunctionGradient optimizationFunctionGradient(final double[] observations
@@ -394,11 +393,11 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
                                                  {
                                                    final double alpha = params[0];
 
-                                                   // Smoothen the observations.
-                                                   final double[] smoothed = smoothingFunction.apply(observations, alpha);
-
                                                    // Prepare a baseline for the observations.
                                                    final double[] baseline = baselineFunction.apply(observations);
+
+                                                   // Smoothen the baselined observations.
+                                                   final double[] smoothed = smoothingFunction.apply(baseline, alpha);
 
                                                    double previousPrediction = smoothed[0];
                                                    double previousSlope = 0.0;
@@ -427,23 +426,34 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
            *
            * @param observations      The observations for which the optimal value of
            *                          \(\alpha\) is required.
+           * @param baselineFunction  A function that prepares a baseline for
+           *                          the observations. The baseline in turn is
+           *                          used to generate predictions for the
+           *                          observations and also to optimize the
+           *                          value of \(\alpha\) through an iterative
+           *                          process.
            * @param smoothingFunction A function to use for smoothing the
            *                          observations during the optimization
            *                          process.
            * @return An {@link ObjectiveFunction}.
            */
-          private ObjectiveFunction optimizationModelFunction(final double[] observations, final BiFunction<double[], Double, double[]> smoothingFunction)
+          private ObjectiveFunction optimizationModelFunction(final double[] observations
+              , final Function<double[], double[]> baselineFunction
+              , final BiFunction<double[], Double, double[]> smoothingFunction)
           {
             return new ObjectiveFunction(params -> {
               final double alpha = params[0];
 
-              // Smoothen the observations.
-              final double[] smoothed = smoothingFunction.apply(observations, alpha);
+              // Prepare a baseline for the observations.
+              final double[] baseline = baselineFunction.apply(observations);
+
+              // Smoothen the baselined observations.
+              final double[] smoothed = smoothingFunction.apply(baseline, alpha);
 
               double sse = 0.0;
-              for (int i = 0; i < observations.length; ++i)
+              for (int i = 0; i < baseline.length - 1; ++i)
               {
-                final double error = observations[i] - smoothed[i];
+                final double error = baseline[i + 1] - smoothed[i];
 
                 sse += error * error;
               }
