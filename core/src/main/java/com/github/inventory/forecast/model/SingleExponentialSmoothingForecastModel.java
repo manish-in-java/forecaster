@@ -294,18 +294,18 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    *
    * <ul>
    * <li>For the general case, and when the predicted value \(S_i\) does
-   * not depend upon the observed value (\O_i\) directly (that is, it only
+   * not depend upon the observed value \(O_i\) directly (that is, it only
    * depends upon observed values \(O_{i-1}\) or earlier), use the
    * {@link #LEAST_SQUARES} optimizer as it finds the optimal \(\alpha\)
    * more accurately and much faster than any other method. When the predicted
-   * value \(S_i\) directly depends upon the observed value (\O_i\), the
-   * error, which is calculated as (\O_i - S_i\) is zero when \(S_i = O_i\).
-   * This tendency inherently guides the optimizer to lean towards
-   * \(\alpha = 1.0\), when \(S_i = O_i\). This is why, the
+   * value \(S_i\) directly depends upon the observed value \(O_i\), the
+   * error, which is calculated as \(O_i - S_i\) is zero when \(S_i = O_i\).
+   * This tendency inherently guides the optimizer to automatically lean
+   * towards \(\alpha = 1.0\), when \(S_i = O_i\). This is why, the
    * {@link #LEAST_SQUARES} optimizer should not be used when \(S_i\) directly
-   * depends upon (\O_i\);</li>
+   * depends upon \(O_i\);</li>
    * <li>When the predicted value \(S_i\) directly depends upon the observed
-   * value (\O_i\), use the {@link #GRADIENT_DESCENT} optimizer.</li>
+   * value \(O_i\), use the {@link #GRADIENT_DESCENT} optimizer.</li>
    * </ul>
    */
   public enum AlphaOptimizer
@@ -341,7 +341,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      * it needs to be lowered or raised.</li>
      * </ol>
      *
-     * @see <a href="https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method">Non-liner conjugate gradient descent</a>
+     * @see <a href="https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method">Non-linear conjugate gradient descent</a>
      */
     GRADIENT_DESCENT
         {
