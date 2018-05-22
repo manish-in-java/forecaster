@@ -90,6 +90,16 @@ import java.util.Arrays;
 public class ExponentialWeightedMovingAverageForecastModel extends SingleExponentialSmoothingForecastModel
 {
   /**
+   * Creates a model with simple average strategy for generating the first
+   * prediction and a {@literal non-linear gradient-descent} optimizer for
+   * finding the optimal value for the dampening factor \(\alpha\).
+   */
+  public ExponentialWeightedMovingAverageForecastModel()
+  {
+    super(AlphaOptimizer.GRADIENT_DESCENT);
+  }
+
+  /**
    * Creates a baseline of a collection of observations. The baseline is
    * used to generate predictions for the observations, as well as fine-tune
    * the model to produce optimal predictions.

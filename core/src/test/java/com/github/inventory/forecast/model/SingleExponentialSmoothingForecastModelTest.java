@@ -16,6 +16,8 @@ package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.domain.Forecast;
 import com.github.inventory.forecast.domain.Sample;
+import com.github.inventory.forecast.model.SingleExponentialSmoothingForecastModel.AlphaOptimizer;
+import com.github.inventory.forecast.model.SingleExponentialSmoothingForecastModel.FirstPredictionGenerator;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -44,6 +46,56 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
   @Test
   public void testForecast()
   {
+    testForecast(getForecastModel());
+  }
+
+  /**
+   * Tests that a forecast model can be constructed with an alternate
+   * strategy for generating the first prediction.
+   */
+  @Test
+  public void testForecastWithAlternateFirstPredictionGenerator()
+  {
+    testForecast(new SingleExponentialSmoothingForecastModel(FirstPredictionGenerator.FIRST_OBSERVATION, AlphaOptimizer.GRADIENT_DESCENT));
+  }
+
+  /**
+   * Tests that a forecast model cannot be constructed without specifying
+   * the strategy for optimizing the value of the dampening factor.
+   */
+  @Test(expected = NullPointerException.class)
+  public void testForecastWithoutAlphaOptimizer()
+  {
+    testForecast(new SingleExponentialSmoothingForecastModel(FirstPredictionGenerator.FIRST_OBSERVATION, null));
+  }
+
+  /**
+   * Tests that a forecast model cannot be constructed without specifying
+   * the strategy for generating the first prediction.
+   */
+  @Test(expected = NullPointerException.class)
+  public void testForecastWithoutFirstPredictionGenerator()
+  {
+    testForecast(new SingleExponentialSmoothingForecastModel(null, AlphaOptimizer.GRADIENT_DESCENT));
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  ForecastModel getForecastModel()
+  {
+    return MODEL;
+  }
+
+  /**
+   * Tests that the single moving average forecast can be correctly generated
+   * for a sample.
+   *
+   * @param model The model to use for generating the forecast.
+   */
+  private void testForecast(final ForecastModel model)
+  {
     // Generate a sample of random values.
     final int samples = getSampleCount();
     final double[] observations = new double[samples];
@@ -54,7 +106,7 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
     }
 
     // Generate a forecast for the sample.
-    final Forecast subject = getForecastModel().forecast(new Sample(observations), getProjectionCount());
+    final Forecast subject = model.forecast(new Sample(observations), getProjectionCount());
     final double[] predictions = subject.getPredictions();
 
     assertNotNull(subject);
@@ -73,14 +125,5 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
     assertNotEquals(0.0, subject.getMeanSquaredError());
     assertNotEquals(0.0, subject.getTotalAbsoluteError());
     assertNotEquals(0.0, subject.getTotalSquaredError());
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  ForecastModel getForecastModel()
-  {
-    return MODEL;
   }
 }

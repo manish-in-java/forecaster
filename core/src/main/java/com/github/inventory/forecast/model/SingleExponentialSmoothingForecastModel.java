@@ -22,7 +22,11 @@ import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.optim.SimpleVectorValueChecker;
+import org.apache.commons.math3.optim.*;
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
+import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
+import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunctionGradient;
+import org.apache.commons.math3.optim.nonlinear.scalar.gradient.NonLinearConjugateGradientOptimizer;
 
 import java.util.Arrays;
 import java.util.function.BiFunction;
@@ -52,7 +56,7 @@ import java.util.function.Function;
  * <p>
  * where, \(i\) is an index that ranges from {@literal 1} to the number of
  * observations in the sample, \(O_i\) is the {@literal i-th} observation,
- * \(S_i\) its smooth version, and \(\alpha\) is an exponent between
+ * \(S_i\) its smooth version, and \(\alpha\) is a dampening factor between
  * \(0\) and \(1\) responsible for smoothing out the observations. This means
  * </p>
  *
@@ -77,7 +81,7 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * Smoothing utilizes an exponent \(\alpha\), that continually decreases
+ * Smoothing utilizes a dampening factor \(\alpha\), that continually decreases
  * the effect of observations farther in the past. The model starts with an
  * initial value of \(\alpha\) (which is usually guessed) but determines
  * the optimal value for the factor that approximates the sample as closely as
@@ -110,9 +114,8 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
 
   /**
    * Creates a model with simple average strategy for generating the first
-   * prediction and a {@literal non-linear least-squares} optimization for
-   * finding the optimal value for the exponent \(\alpha\) such
-   * that the resultant forecast is as close to the sample as possible.
+   * prediction and a {@literal non-linear least-squares} optimizer for
+   * finding the optimal value for the dampening factor \(\alpha\).
    */
   public SingleExponentialSmoothingForecastModel()
   {
@@ -122,7 +125,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   /**
    * Creates a model with simple average strategy for generating the first
    * prediction and a specified strategy for finding the optimal value for
-   * the exponent \(\alpha\).
+   * the dampening factor \(\alpha\).
    *
    * @param alphaOptimizer The strategy to use for optimizing \(\alpha\) such
    *                       that the forecast is as close to the sample as
@@ -130,7 +133,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    * @throws NullPointerException if {@code alphaOptimizer} is {@literal null}.
    * @see AlphaOptimizer
    */
-  private SingleExponentialSmoothingForecastModel(final AlphaOptimizer alphaOptimizer)
+  SingleExponentialSmoothingForecastModel(final AlphaOptimizer alphaOptimizer)
   {
     this(FirstPredictionGenerator.SIMPLE_AVERAGE, alphaOptimizer);
   }
@@ -156,7 +159,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    * @see AlphaOptimizer
    * @see FirstPredictionGenerator
    */
-  private SingleExponentialSmoothingForecastModel(final FirstPredictionGenerator firstPredictionGenerator, final AlphaOptimizer alphaOptimizer)
+  SingleExponentialSmoothingForecastModel(final FirstPredictionGenerator firstPredictionGenerator, final AlphaOptimizer alphaOptimizer)
   {
     super();
 
@@ -228,7 +231,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   }
 
   /**
-   * Gets the optimal value for the exponent \(\alpha\) for a set of
+   * Gets the optimal value for the dampening factor \(\alpha\) for a set of
    * observations.
    *
    * @param observations The observations for which \(\alpha\) is required.
@@ -246,7 +249,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    * (instead of corresponding) prediction.
    *
    * @param observations The observations to smoothen.
-   * @param alpha        The exponent \(\alpha\).
+   * @param alpha        The dampening factor \(\alpha\).
    * @return Smoothened observations.
    */
   double[] smoothenObservations(final double[] observations, final double alpha)
@@ -284,21 +287,185 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   }
 
   /**
-   * Determines how the exponent \(\alpha\) is optimized such that
+   * <p>
+   * Determines how the dampening factor \(\alpha\) is optimized such that
    * the resultant forecast is as close to the sample as possible.
+   * </p>
+   *
+   * <ul>
+   * <li>For the general case, and when the predicted value \(S_i\) does
+   * not depend upon the observed value (\O_i\) directly (that is, it only
+   * depends upon observed values \(O_{i-1}\) or earlier), use the
+   * {@link #LEAST_SQUARES} optimizer as it finds the optimal \(\alpha\)
+   * more accurately and much faster than any other method. When the predicted
+   * value \(S_i\) directly depends upon the observed value (\O_i\), the
+   * error, which is calculated as (\O_i - S_i\) is zero when \(S_i = O_i\).
+   * This tendency inherently guides the optimizer to lean towards
+   * \(\alpha = 1.0\), when \(S_i = O_i\). This is why, the
+   * {@link #LEAST_SQUARES} optimizer should not be used when \(S_i\) directly
+   * depends upon (\O_i\);</li>
+   * <li>When the predicted value \(S_i\) directly depends upon the observed
+   * value (\O_i\), use the {@link #GRADIENT_DESCENT} optimizer.</li>
+   * </ul>
    */
   public enum AlphaOptimizer
   {
     /**
      * <p>
-     * Optimizes the value for the exponent \(\alpha\) for a set of
+     * Optimizes the value for the dampening factor \(\alpha\) for a set of
+     * observations using the {@literal Non-linear Conjugate Gradient Descent}
+     * algorithm, which is a non-linear steepest-descent optimization
+     * algorithm. This algorithm generates predictions for the given
+     * observations, starting with an initial guess for the exponent
+     * \(\alpha\), and iteratively changing the dampening factor value until
+     * one is found where the gradient is zero.
+     * </p>
+     *
+     * <p>
+     * The optimization algorithm requires the following input:
+     * </p>
+     *
+     * <ol>
+     * <li>The observations for which \(\alpha\) needs to be optimized;</li>
+     * <li>An initial guess for \(\alpha\);</li>
+     * <li>A function that can take the observations and some value for
+     * \(\alpha\), and produce predictions for each of the observations.
+     * This is known as the model function for the algorithm. The algorithm
+     * internally calculates the MSE for each value of \(\alpha\) by using
+     * the given observations and their corresponding predictions for the
+     * specified value of \(\alpha\);</li>
+     * <li>A function that can take the observations and some value for
+     * \(\alpha\), and produce a <i>gradient</i> for each prediction
+     * made by the model function. The gradient determines whether the
+     * value of \(\alpha\) is too high or too low, and therefore whether
+     * it needs to be lowered or raised.</li>
+     * </ol>
+     *
+     * @see <a href="https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method">Non-liner conjugate gradient descent</a>
+     */
+    GRADIENT_DESCENT
+        {
+          private final SimpleValueChecker ALPHA_CONVERGENCE_CHECKER = new SimpleValueChecker(ALPHA_CONVERGENCE_THRESHOLD, ALPHA_CONVERGENCE_THRESHOLD);
+          private final NonLinearConjugateGradientOptimizer ALPHA_OPTIMIZER = new NonLinearConjugateGradientOptimizer(NonLinearConjugateGradientOptimizer.Formula.FLETCHER_REEVES
+              , ALPHA_CONVERGENCE_CHECKER);
+          private final int MAX_ITERATIONS = 10000;
+
+          /**
+           * {@inheritDoc}
+           */
+          @Override
+          protected double optimize(final double[] observations
+              , final Function<double[]
+              , double[]> baselineFunction
+              , final BiFunction<double[], Double, double[]> smoothingFunction)
+          {
+            return ALPHA_OPTIMIZER.optimize(optimizationModelFunction(observations, smoothingFunction)
+                , optimizationFunctionGradient(observations, baselineFunction, smoothingFunction)
+                , GoalType.MINIMIZE
+                , new InitialGuess(new double[] { INITIAL_ALPHA })
+                , new MaxEval(MAX_ITERATIONS)
+                , new MaxIter(MAX_ITERATIONS))
+                                  .getPoint()[0];
+          }
+
+          /**
+           * Gets the model function to use for finding the gradient for a
+           * given value of alpha.
+           *
+           * @param observations      The observations for which the optimal value of
+           *                          \(\alpha\) is required.
+           * @param smoothingFunction A function to use for smoothing the
+           *                          observations during the optimization
+           *                          process.
+           * @param baselineFunction  A function that prepares a baseline for
+           *                          the observations. The baseline in turn is
+           *                          used to generate predictions for the
+           *                          observations and also to optimize the
+           *                          value of \(\alpha\) through an iterative
+           *                          process that attempts to solve the
+           *                          least-squares problem.
+           * @return An {@link ObjectiveFunction}.
+           */
+          private ObjectiveFunctionGradient optimizationFunctionGradient(final double[] observations
+              , final Function<double[], double[]> baselineFunction
+              , final BiFunction<double[], Double, double[]> smoothingFunction)
+          {
+            return new ObjectiveFunctionGradient(params ->
+                                                 {
+                                                   final double alpha = params[0];
+
+                                                   // Smoothen the observations.
+                                                   final double[] smoothed = smoothingFunction.apply(observations, alpha);
+
+                                                   // Prepare a baseline for the observations.
+                                                   final double[] baseline = baselineFunction.apply(observations);
+
+                                                   double previousPrediction = smoothed[0];
+                                                   double previousSlope = 0.0;
+                                                   double gradient = 0.0;
+
+                                                   // Calculate the gradient.
+                                                   for (int i = 0; i < baseline.length - 1; ++i)
+                                                   {
+                                                     final double error = baseline[i + 1] - smoothed[i];
+
+                                                     final double slope = baseline[i] - previousPrediction + (1 - alpha) * previousSlope;
+
+                                                     gradient += error * slope;
+                                                     previousSlope = slope;
+                                                     previousPrediction = smoothed[i];
+                                                   }
+
+                                                   return new double[] { 2 * gradient };
+                                                 });
+          }
+
+          /**
+           * Gets the model function to use for optimizing the value of
+           * \(\alpha\), which calculates the MSE for a given collection of
+           * observations and a specified value of alpha\(\alpha\).
+           *
+           * @param observations      The observations for which the optimal value of
+           *                          \(\alpha\) is required.
+           * @param smoothingFunction A function to use for smoothing the
+           *                          observations during the optimization
+           *                          process.
+           * @return An {@link ObjectiveFunction}.
+           */
+          private ObjectiveFunction optimizationModelFunction(final double[] observations, final BiFunction<double[], Double, double[]> smoothingFunction)
+          {
+            return new ObjectiveFunction(params -> {
+              final double alpha = params[0];
+
+              // Smoothen the observations.
+              final double[] smoothed = smoothingFunction.apply(observations, alpha);
+
+              double sse = 0.0;
+              for (int i = 0; i < observations.length; ++i)
+              {
+                final double error = observations[i] - smoothed[i];
+
+                sse += error * error;
+              }
+
+              return sse;
+            });
+          }
+        },
+
+    /**
+     * <p>
+     * Optimizes the value for the dampening factor \(\alpha\) for a set of
      * observations using the {@literal Levenberg-Marquardt (LM)} algorithm,
      * which is a non-linear least-squares curve-fitting algorithm. This
      * algorithm generates predictions for the given observations, starting
-     * with an initial guess for the exponent \(\alpha\), and iteratively
-     * changing the exponent value until one is found that minimizes the
-     * {@literal sum-squared-error (MSE)} for the observations. The
-     * optimization algorithm requires the following input:
+     * with an initial guess for the dampening factor \(\alpha\), and iteratively
+     * changing the dampening factor value until one is found that minimizes the
+     * {@literal sum-squared-error (MSE)} for the observations.
+     * </p>
+     *
+     * <p>
+     * The optimization algorithm requires the following input:
      * </p>
      *
      * <ol>
@@ -403,6 +570,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      */
     LEAST_SQUARES
         {
+          private final SimpleVectorValueChecker ALPHA_CONVERGENCE_CHECKER = new SimpleVectorValueChecker(ALPHA_CONVERGENCE_THRESHOLD, ALPHA_CONVERGENCE_THRESHOLD);
           private final LevenbergMarquardtOptimizer ALPHA_OPTIMIZER = new LevenbergMarquardtOptimizer();
 
           /**
@@ -421,7 +589,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
           /**
            * Converts a collection of observations into a
            * {@literal least-squares curve-fitting problem} using an initial
-           * value of the exponent \(\alpha\). The exponent is used for
+           * value of the dampening factor \(\alpha\). The dampening factor is used for
            * exponential smoothing so that the resultant problem can be fed
            * to a curve-fitting algorithm for finding the optimal value of
            * \(\alpha\).
@@ -524,7 +692,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
           }
         };
 
-    protected final SimpleVectorValueChecker ALPHA_CONVERGENCE_CHECKER = new SimpleVectorValueChecker(1e-6, 1e-6);
+    protected final double ALPHA_CONVERGENCE_THRESHOLD = 1e-6;
 
     /**
      * Gets a validator that ensures that the value of \(\alpha\) as determined
@@ -538,21 +706,21 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
       return points -> {
         final double alpha = points.getEntry(0);
 
-        return alpha >= MIN_ALPHA && alpha <= MAX_ALPHA
-               // If the alpha is within its bounds, return its value.
-               ? points
-               : alpha < MIN_ALPHA
-                 // If the alpha is below the lower threshold, reset it to the
-                 // lower threshold.
-                 ? new ArrayRealVector(new double[] { MIN_ALPHA })
+        return alpha < MIN_ALPHA
+               // If the alpha is below the lower threshold, reset it to the
+               // lower threshold.
+               ? new ArrayRealVector(new double[] { MIN_ALPHA })
+               : alpha > MAX_ALPHA
                  // If the alpha is above the upper threshold, reset it to the
                  // upper threshold.
-                 : new ArrayRealVector(new double[] { MAX_ALPHA });
+                 ? new ArrayRealVector(new double[] { MAX_ALPHA })
+                 // If the alpha is within its bounds, return its value.
+                 : points;
       };
     }
 
     /**
-     * Finds the optimal value for the exponent \(\alpha\) for a
+     * Finds the optimal value for the dampening factor \(\alpha\) for a
      * collection of observations, such that the value can be used to
      * generate a forecast that is as close to the sample as possible.
      *
