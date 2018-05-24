@@ -14,19 +14,15 @@
 
 package com.github.inventory.forecast.model;
 
-import com.github.inventory.forecast.domain.Forecast;
-import com.github.inventory.forecast.domain.Sample;
 import com.github.inventory.forecast.model.SingleExponentialSmoothingForecastModel.AlphaOptimizer;
-import com.github.inventory.forecast.model.SingleExponentialSmoothingForecastModel.FirstPredictionGenerator;
+import com.github.inventory.forecast.model.SingleExponentialSmoothingForecastModel.NaiveFirstPredictionGenerator;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  * Unit tests for {@link SingleExponentialSmoothingForecastModel}.
  */
-public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTest
+public class SingleExponentialSmoothingForecastModelTest extends ExponentialSmoothingForecastModelTest
 {
   private static SingleExponentialSmoothingForecastModel MODEL;
 
@@ -40,23 +36,13 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
   }
 
   /**
-   * Tests that the single exponential smoothing forecast can be correctly
-   * generated for a sample.
-   */
-  @Test
-  public void testForecast()
-  {
-    testForecast(getForecastModel());
-  }
-
-  /**
    * Tests that a forecast model can be constructed with an alternate
    * strategy for generating the first prediction.
    */
   @Test
   public void testForecastWithAlternateFirstPredictionGenerator()
   {
-    testForecast(new SingleExponentialSmoothingForecastModel(FirstPredictionGenerator.FIRST_OBSERVATION, AlphaOptimizer.GRADIENT_DESCENT));
+    testForecast(new SingleExponentialSmoothingForecastModel(NaiveFirstPredictionGenerator.INSTANCE, AlphaOptimizer.GRADIENT_DESCENT));
   }
 
   /**
@@ -66,7 +52,7 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
   @Test(expected = NullPointerException.class)
   public void testForecastWithoutAlphaOptimizer()
   {
-    testForecast(new SingleExponentialSmoothingForecastModel(FirstPredictionGenerator.FIRST_OBSERVATION, null));
+    testForecast(new SingleExponentialSmoothingForecastModel(NaiveFirstPredictionGenerator.INSTANCE, null));
   }
 
   /**
@@ -86,44 +72,5 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
   ForecastModel getForecastModel()
   {
     return MODEL;
-  }
-
-  /**
-   * Tests that the single exponential smoothing forecast can be correctly
-   * generated for a sample.
-   *
-   * @param model The model to use for generating the forecast.
-   */
-  private void testForecast(final ForecastModel model)
-  {
-    // Generate a sample of random values.
-    final int samples = getSampleCount();
-    final double[] observations = new double[samples];
-
-    for (int i = 0; i < samples; ++i)
-    {
-      observations[i] = getDouble();
-    }
-
-    // Generate a forecast for the sample.
-    final Forecast subject = model.forecast(new Sample(observations), getProjectionCount());
-    final double[] predictions = subject.getPredictions();
-
-    assertNotNull(subject);
-    assertNotNull(predictions);
-    assertTrue(predictions.length > samples);
-
-    for (int i = 0; i < observations.length; ++i)
-    {
-      assertNotEquals(0.0, predictions[i]);
-    }
-
-    // Ensure that the accuracy measures have been calculated.
-    assertNotEquals(0.0, subject.getBias());
-    assertNotEquals(0.0, subject.getMeanAbsoluteDeviation());
-    assertNotEquals(0.0, subject.getMeanAbsolutePercentageError());
-    assertNotEquals(0.0, subject.getMeanSquaredError());
-    assertNotEquals(0.0, subject.getTotalAbsoluteError());
-    assertNotEquals(0.0, subject.getTotalSquaredError());
   }
 }

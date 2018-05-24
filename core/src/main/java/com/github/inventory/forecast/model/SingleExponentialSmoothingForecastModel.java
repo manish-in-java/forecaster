@@ -131,7 +131,7 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    */
   SingleExponentialSmoothingForecastModel(final AlphaOptimizer alphaOptimizer)
   {
-    this(FirstPredictionGenerator.SIMPLE_AVERAGE, alphaOptimizer);
+    this(SimpleAverageFirstPredictionGenerator.INSTANCE, alphaOptimizer);
   }
 
   /**
@@ -746,34 +746,8 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * Determines how the first prediction for a sample of observations should be
    * generated.
    */
-  public enum FirstPredictionGenerator
+  public abstract static class FirstPredictionGenerator
   {
-    /**
-     * Uses the first observation as the first prediction. A simple and quick
-     * strategy that may lead to large errors when used with a small
-     * \(\alpha\).
-     */
-    FIRST_OBSERVATION
-        {
-          @Override
-          double predict(final double[] observations)
-          {
-            return observations[0];
-          }
-        },
-
-    /**
-     * Uses the simple average of all the observations as the first prediction.
-     */
-    SIMPLE_AVERAGE
-        {
-          @Override
-          double predict(final double[] observations)
-          {
-            return SingleExponentialSmoothingForecastModel.simpleAverage(observations);
-          }
-        };
-
     /**
      * Determines the prediction corresponding to the first observation
      * in a given collection of observations.
@@ -782,6 +756,56 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      *                     required.
      * @return The first prediction for the observed values.
      */
-    abstract double predict(final double[] observations);
+    protected abstract double predict(final double[] observations);
+  }
+
+  /**
+   * Uses the first observation as the first prediction. A simple and quick
+   * strategy that may lead to large errors when used with a small value for
+   * \(\alpha\).
+   */
+  public final static class NaiveFirstPredictionGenerator extends FirstPredictionGenerator
+  {
+    public static final FirstPredictionGenerator INSTANCE = new NaiveFirstPredictionGenerator();
+
+    /**
+     * Deliberately hidden to prevent instantiation.
+     */
+    private NaiveFirstPredictionGenerator()
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected double predict(final double[] observations)
+    {
+      return observations[0];
+    }
+  }
+
+  /**
+   * Uses the simple average of all the observations as the first prediction.
+   */
+  public final static class SimpleAverageFirstPredictionGenerator extends FirstPredictionGenerator
+  {
+    public static final FirstPredictionGenerator INSTANCE = new SimpleAverageFirstPredictionGenerator();
+
+    /**
+     * Deliberately hidden to prevent instantiation.
+     */
+    private SimpleAverageFirstPredictionGenerator()
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected double predict(final double[] observations)
+    {
+      return SingleExponentialSmoothingForecastModel.simpleAverage(observations);
+    }
   }
 }
