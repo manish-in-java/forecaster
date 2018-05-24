@@ -96,7 +96,7 @@ public class ExponentialWeightedMovingAverageForecastModel extends SingleExponen
    */
   public ExponentialWeightedMovingAverageForecastModel()
   {
-    super(AlphaOptimizer.GRADIENT_DESCENT);
+    super(GradientDescentOptimizer.INSTANCE);
   }
 
   /**
