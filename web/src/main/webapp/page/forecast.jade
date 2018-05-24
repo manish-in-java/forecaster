@@ -10,21 +10,21 @@ block scripts
 
 block introduction
         .ui.text.container
-          h1.ui.inverted.header Inventory Forecast
+          h1.ui.inverted.header Forecaster
           .ui.huge.labels
             .ui.teal.label
               .detail Plan Better
             .ui.olive.label
-              .detail Minimize Holding
+              .detail Minimize Costs
             .ui.green.label
-              .detail Maximize Orders
+              .detail Maximize Profits
 
 block content
         .ui.vertical.stripe.segment(id="content")
           .ui.equal.width.stackable.internally.celled.grid.container
             .row
               .column
-                form.ui.form(action="/forecast", id="form", method="POST")
+                form.ui.form(action="/", id="form", method="POST")
                   h4.ui.dividing.header Forecasting
                   ol
                     li Provide some data points, such as,
@@ -62,22 +62,22 @@ block content
                 i.dropdown.icon
                 | Overview
               .content.transition.hidden
-                p Businesses that deal with physical goods are usually required
-                  | to maintain minimum quantities of products so that they can
-                  | fulfill customer orders and not have to decline orders. As
-                  | there is cost associated with storage of goods, and further
-                  | costs may be incurred on account of monitoring the goods
-                  | condition while they are stored, it is desirable to maintain
-                  | the minimum possible quantities required for individual
-                  | products  to fulfill orders, such that the cost is minimized,
-                  | and order fulfilment is maximized.
-                p <b>Inventory Forecasting</b> is a discipline under <i>Supply-chain and Logistics</i>
-                  | function that aims to analyze past sales trends to project
-                  | inventory holding into the future. The task of analyzing
-                  | past sales trends to generate future projections is known
-                  | as <b>Forecasting</b>. Given that products have different
-                  | lifecycle and demand patterns, and businesses have
-                  | varying production capabilities and storage options
-                  | available to them, forecasting relies on using different
-                  | analytical techniques, called <b>forecast models</b> to
-                  | predict trends for different types of products.
+                p <b>Forecasting</b> is an estimation process that enables businesses to predict
+                  | important parameters, such as, demand, sales, profits, etc. Good
+                  | forecasts enable businesses to plan better and make adjustments to their
+                  | strategy, if required, well in advance.
+                p Forecasting is affected by a number of factors, including the nature of
+                  | the product, seasonality, customer preferences, socioeconomic environment,
+                  | competitor dynamics, etc.
+                p Forecasting is usually performed using actual data collected in the past.
+                  | For example, a sales forecast can be performed using past sales data.
+                  | Similarly, a price forecast for a stock traded on a stock exchange can be
+                  | performed using the historical prices for the stock. Each data point is
+                  | called an <i>Observation</i> and the collection of observations, based
+                  | on which the forecast is generated a <i>Sample</i>.
+                p There are many forecasting techniques. Each technique, known as a
+                  | <i>Forecast Model</i>, (or <i>Model</i> in short) attempts to
+                  | analyze the sample in a certain way so as to be as accurate as possible.
+                  | Each model amplifies or suppresses one or more pattern underlying the sample
+                  | set. As a result, different types of samples benefit from different
+                  | forecast models.

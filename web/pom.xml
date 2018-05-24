@@ -7,12 +7,12 @@
 
   <parent>
     <groupId>com.github</groupId>
-    <artifactId>inventory-planner-parent</artifactId>
+    <artifactId>forecaster-parent</artifactId>
     <version>1.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>inventory-planner-web</artifactId>
+  <artifactId>forecaster-web</artifactId>
   <packaging>war</packaging>
 
   <build>
@@ -43,7 +43,7 @@
   <dependencies>
     <dependency>
       <groupId>${project.groupId}</groupId>
-      <artifactId>inventory-planner</artifactId>
+      <artifactId>forecaster</artifactId>
       <version>${project.version}</version>
     </dependency>
 

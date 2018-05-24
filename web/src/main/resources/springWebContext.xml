@@ -25,7 +25,7 @@
   </bean>
 
   <context:annotation-config/>
-  <context:component-scan base-package="com.github.inventory.web"/>
+  <context:component-scan base-package="com.github.forecast.web"/>
 
   <mvc:annotation-driven ignore-default-model-on-redirect="true">
     <mvc:path-matching suffix-pattern="false" trailing-slash="false" registered-suffixes-only="true"/>

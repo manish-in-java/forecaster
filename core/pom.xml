@@ -7,12 +7,12 @@
 
   <parent>
     <groupId>com.github</groupId>
-    <artifactId>inventory-planner-parent</artifactId>
+    <artifactId>forecaster-parent</artifactId>
     <version>1.0</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <artifactId>inventory-planner</artifactId>
+  <artifactId>forecaster</artifactId>
   <packaging>jar</packaging>
 
   <build>
