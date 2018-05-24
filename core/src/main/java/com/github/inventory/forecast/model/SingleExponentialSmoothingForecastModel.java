@@ -105,8 +105,8 @@ import java.util.function.Function;
  */
 public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothingForecastModel
 {
-  private final AlphaOptimizer           alphaOptimizer;
-  private final FirstPredictionGenerator firstPredictionGenerator;
+  private final AlphaOptimizer          alphaOptimizer;
+  private final FirstPredictionProvider firstPredictionProvider;
 
   /**
    * Creates a model with simple average strategy for generating the first
@@ -131,31 +131,31 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    */
   SingleExponentialSmoothingForecastModel(final AlphaOptimizer alphaOptimizer)
   {
-    this(SimpleAverageFirstPredictionGenerator.INSTANCE, alphaOptimizer);
+    this(SimpleAverageFirstPredictionProvider.INSTANCE, alphaOptimizer);
   }
 
   /**
    * Creates a model with a specified strategy for generating the first
    * prediction.
    *
-   * @param firstPredictionGenerator The strategy to use for generating the
-   *                                 first prediction. This has a significant
-   *                                 impact on the model accuracy, especially
-   *                                 if a small \(\alpha\) is used. It is
-   *                                 recommended to use the simple average of
-   *                                 the observations as the initial
-   *                                 prediction, which, even though slightly
-   *                                 time-consuming, is likely to produce a
-   *                                 more accurate forecast.
-   * @param alphaOptimizer           The strategy to use for optimizing
-   *                                 \(\alpha\) such that the forecast is as
-   *                                 close to the sample as possible.
-   * @throws NullPointerException if {@code firstPredictionGenerator} or
+   * @param firstPredictionProvider The strategy to use for generating the
+   *                                first prediction. This has a significant
+   *                                impact on the model accuracy, especially
+   *                                if a small \(\alpha\) is used. It is
+   *                                recommended to use the simple average of
+   *                                the observations as the initial
+   *                                prediction, which, even though slightly
+   *                                time-consuming, is likely to produce a
+   *                                more accurate forecast.
+   * @param alphaOptimizer          The strategy to use for optimizing
+   *                                \(\alpha\) such that the forecast is as
+   *                                close to the sample as possible.
+   * @throws NullPointerException if {@code firstPredictionProvider} or
    *                              {@code alphaOptimizer} is {@literal null}.
    * @see AlphaOptimizer
-   * @see FirstPredictionGenerator
+   * @see FirstPredictionProvider
    */
-  SingleExponentialSmoothingForecastModel(final FirstPredictionGenerator firstPredictionGenerator, final AlphaOptimizer alphaOptimizer)
+  SingleExponentialSmoothingForecastModel(final FirstPredictionProvider firstPredictionProvider, final AlphaOptimizer alphaOptimizer)
   {
     super();
 
@@ -166,13 +166,13 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
     }
 
     // Ensure that the first prediction generation strategy is specified.
-    if (firstPredictionGenerator == null)
+    if (firstPredictionProvider == null)
     {
       throw new NullPointerException("The strategy for generating the first prediction must be specified.");
     }
 
     this.alphaOptimizer = alphaOptimizer;
-    this.firstPredictionGenerator = firstPredictionGenerator;
+    this.firstPredictionProvider = firstPredictionProvider;
   }
 
   /**
@@ -279,7 +279,7 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    */
   private double firstPrediction(final double[] observations)
   {
-    return firstPredictionGenerator.predict(observations);
+    return firstPredictionProvider.predict(observations);
   }
 
   /**
@@ -743,13 +743,12 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
   }
 
   /**
-   * Determines how the first prediction for a sample of observations should be
-   * generated.
+   * Provides the first prediction for a sample of observations.
    */
-  public abstract static class FirstPredictionGenerator
+  public abstract static class FirstPredictionProvider
   {
     /**
-     * Determines the prediction corresponding to the first observation
+     * Provides the prediction corresponding to the first observation
      * in a given collection of observations.
      *
      * @param observations The observations for which the prediction is
@@ -760,42 +759,16 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
   }
 
   /**
-   * Uses the first observation as the first prediction. A simple and quick
-   * strategy that may lead to large errors when used with a small value for
-   * \(\alpha\).
-   */
-  public final static class NaiveFirstPredictionGenerator extends FirstPredictionGenerator
-  {
-    public static final FirstPredictionGenerator INSTANCE = new NaiveFirstPredictionGenerator();
-
-    /**
-     * Deliberately hidden to prevent instantiation.
-     */
-    private NaiveFirstPredictionGenerator()
-    {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected double predict(final double[] observations)
-    {
-      return observations[0];
-    }
-  }
-
-  /**
    * Uses the simple average of all the observations as the first prediction.
    */
-  public final static class SimpleAverageFirstPredictionGenerator extends FirstPredictionGenerator
+  public final static class SimpleAverageFirstPredictionProvider extends FirstPredictionProvider
   {
-    public static final FirstPredictionGenerator INSTANCE = new SimpleAverageFirstPredictionGenerator();
+    public static final FirstPredictionProvider INSTANCE = new SimpleAverageFirstPredictionProvider();
 
     /**
      * Deliberately hidden to prevent instantiation.
      */
-    private SimpleAverageFirstPredictionGenerator()
+    private SimpleAverageFirstPredictionProvider()
     {
     }
 
@@ -806,6 +779,32 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
     protected double predict(final double[] observations)
     {
       return SingleExponentialSmoothingForecastModel.simpleAverage(observations);
+    }
+  }
+
+  /**
+   * Uses the first observation as the first prediction. A simple and quick
+   * strategy that may lead to large errors when used with a small value for
+   * \(\alpha\).
+   */
+  public final static class SimpleFirstPredictionProvider extends FirstPredictionProvider
+  {
+    public static final FirstPredictionProvider INSTANCE = new SimpleFirstPredictionProvider();
+
+    /**
+     * Deliberately hidden to prevent instantiation.
+     */
+    private SimpleFirstPredictionProvider()
+    {
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected double predict(final double[] observations)
+    {
+      return observations[0];
     }
   }
 }

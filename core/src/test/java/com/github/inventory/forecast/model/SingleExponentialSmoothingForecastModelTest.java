@@ -15,7 +15,6 @@
 package com.github.inventory.forecast.model;
 
 import com.github.inventory.forecast.model.SingleExponentialSmoothingForecastModel.AlphaOptimizer;
-import com.github.inventory.forecast.model.SingleExponentialSmoothingForecastModel.NaiveFirstPredictionGenerator;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -42,7 +41,7 @@ public class SingleExponentialSmoothingForecastModelTest extends ExponentialSmoo
   @Test
   public void testForecastWithAlternateFirstPredictionGenerator()
   {
-    testForecast(new SingleExponentialSmoothingForecastModel(NaiveFirstPredictionGenerator.INSTANCE, AlphaOptimizer.GRADIENT_DESCENT));
+    testForecast(new SingleExponentialSmoothingForecastModel(SingleExponentialSmoothingForecastModel.SimpleFirstPredictionProvider.INSTANCE, AlphaOptimizer.GRADIENT_DESCENT));
   }
 
   /**
@@ -52,7 +51,7 @@ public class SingleExponentialSmoothingForecastModelTest extends ExponentialSmoo
   @Test(expected = NullPointerException.class)
   public void testForecastWithoutAlphaOptimizer()
   {
-    testForecast(new SingleExponentialSmoothingForecastModel(NaiveFirstPredictionGenerator.INSTANCE, null));
+    testForecast(new SingleExponentialSmoothingForecastModel(SingleExponentialSmoothingForecastModel.SimpleFirstPredictionProvider.INSTANCE, null));
   }
 
   /**
