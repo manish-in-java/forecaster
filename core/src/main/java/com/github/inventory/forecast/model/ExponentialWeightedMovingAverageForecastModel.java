@@ -26,7 +26,7 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(S_i = \alpha{O_i} + (1 - \alpha)S_{i-1}\)
+ * \(\boxed{S_i = \alpha{O_i} + (1 - \alpha)S_{i-1}}\)
  * <br>
  * </p>
  *
@@ -34,7 +34,7 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(S_i = S_{i-1} + \alpha({O_i} - S_{i-1})\)
+ * \(\boxed{S_i = S_{i-1} + \alpha({O_i} - S_{i-1})}\)
  * <br>
  * </p>
  *
@@ -126,7 +126,7 @@ public class ExponentialWeightedMovingAverageForecastModel extends SingleExponen
     // provide a forecast that most closely fits the observations.
     final double optimalAlpha = optimalAlpha(observations);
 
-    // Smoothen the observations.
+    // Smoothen the observations using the optimal value for alpha.
     final double[] smoothed = smoothenObservations(observations, optimalAlpha);
 
     // Add the smooth observations as the predictions for the known

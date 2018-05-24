@@ -19,10 +19,12 @@ import org.apache.commons.math3.analysis.MultivariateMatrixFunction;
 import org.apache.commons.math3.analysis.MultivariateVectorFunction;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
 import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
-import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
 import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
 import org.apache.commons.math3.linear.ArrayRealVector;
-import org.apache.commons.math3.optim.*;
+import org.apache.commons.math3.optim.InitialGuess;
+import org.apache.commons.math3.optim.MaxEval;
+import org.apache.commons.math3.optim.MaxIter;
+import org.apache.commons.math3.optim.SimpleValueChecker;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunctionGradient;
@@ -41,7 +43,7 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(S_i = \alpha{O_{i-1}} + (1 - \alpha)S_{i-1}\)
+ * \(\boxed{S_i = \alpha{O_{i-1}} + (1 - \alpha)S_{i-1}}\)
  * <br>
  * </p>
  *
@@ -49,7 +51,7 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(S_i = S_{i-1} + \alpha({O_{i-1}} - S_{i-1})\)
+ * \(\boxed{S_i = S_{i-1} + \alpha({O_{i-1}} - S_{i-1})}\)
  * <br>
  * </p>
  *
@@ -66,8 +68,8 @@ import java.util.function.Function;
  * \(S_3 = \alpha{O_2} + (1 - \alpha)S_2\)
  * <br>
  * \(S_4 = \alpha{O_3} + (1 - \alpha)S_3\)
- * <br><br>
- * and so on.
+ * <br>
+ * ... and so on.
  * </p>
  *
  * <p>
@@ -101,14 +103,8 @@ import java.util.function.Function;
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc431.htm">Exponential Smoothing</a>
  */
-public class SingleExponentialSmoothingForecastModel extends ForecastModel
+public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothingForecastModel
 {
-  private static final double INITIAL_ALPHA                      = 0.5;
-  private static final double MAX_ALPHA                          = 0.8;
-  private static final int    MAX_ALPHA_OPTIMIZATION_EVALUATIONS = 100;
-  private static final int    MAX_ALPHA_OPTIMIZATION_ITERATIONS  = 100;
-  private static final double MIN_ALPHA                          = 0.2;
-
   private final AlphaOptimizer           alphaOptimizer;
   private final FirstPredictionGenerator firstPredictionGenerator;
 
@@ -206,7 +202,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
   @Override
   Forecast forecast(final double[] observations, final int projections)
   {
-    // Using the initial guess for alpha, find its optimal value that will
+    // Using an initial guess for alpha, find its optimal value that will
     // provide a forecast that most closely fits the observations.
     final double optimalAlpha = optimalAlpha(observations);
 
@@ -236,7 +232,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
    *
    * @param observations The observations for which \(\alpha\) is required.
    * @return A best-effort optimal value for \(\alpha\), given the
-   * observations and the initial guess.
+   * observations.
    */
   double optimalAlpha(final double[] observations)
   {
@@ -345,7 +341,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      */
     GRADIENT_DESCENT
         {
-          private final SimpleValueChecker ALPHA_CONVERGENCE_CHECKER = new SimpleValueChecker(ALPHA_CONVERGENCE_THRESHOLD, ALPHA_CONVERGENCE_THRESHOLD);
+          private final SimpleValueChecker ALPHA_CONVERGENCE_CHECKER = new SimpleValueChecker(DAMPENING_FACTOR_CONVERGENCE_THRESHOLD, DAMPENING_FACTOR_CONVERGENCE_THRESHOLD);
           private final NonLinearConjugateGradientOptimizer ALPHA_OPTIMIZER = new NonLinearConjugateGradientOptimizer(NonLinearConjugateGradientOptimizer.Formula.FLETCHER_REEVES
               , ALPHA_CONVERGENCE_CHECKER);
           private final int MAX_ITERATIONS = 10000;
@@ -362,7 +358,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
             return ALPHA_OPTIMIZER.optimize(optimizationModelFunction(observations, baselineFunction, smoothingFunction)
                 , optimizationFunctionGradient(observations, baselineFunction, smoothingFunction)
                 , GoalType.MINIMIZE
-                , new InitialGuess(new double[] { INITIAL_ALPHA })
+                , new InitialGuess(new double[] { INITIAL_DAMPENING_FACTOR })
                 , new MaxEval(MAX_ITERATIONS)
                 , new MaxIter(MAX_ITERATIONS))
                                   .getPoint()[0];
@@ -511,9 +507,9 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      * \(S_i\) are the values of the function \(S\) at \(i\) distinct points.
      * In the case of single exponential smoothing forecast models, there
      * is only one parameter \(\alpha\) that impacts the predicted value for
-     * a given observed values. Therefore, the <i>Jacobian</i> (\(J\)) depends
+     * a given observed value. Therefore, the <i>Jacobian</i> (\(J\)) depends
      * on only this one parameter \(\alpha\) and thereby reduces to
-     * \(J_i = \frac{\partial S_i}{\partial \alpha}\).
+     * \(\boxed{J_i = \frac{\partial S_i}{\partial \alpha}}\).
      * </p>
      *
      * <p>
@@ -533,7 +529,7 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      *
      * <p>
      * <br>
-     * \(J_i = \frac{\partial S_i}{\partial \alpha}\) reduces to
+     * \(J_i = \frac{\partial S_i}{\partial \alpha}\) reduces to (through the rules for partial derivatives and the chain rule of differentiation)
      * <br>
      * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
      * + \alpha{\frac{\partial O}{\partial \alpha}}
@@ -546,10 +542,9 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
      * + O
      * - S_{i-1}\) (since \(O\) does not depend on \(\alpha\),
-     * and therefore its derivative with respect to \(\alpha\) is
-     * {@literal zero}, or
+     * and hence \(\frac{\partial O_i}{\partial \alpha} = 0\)), or
      * <br>
-     * \(J_i = O - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}\)
+     * \(\boxed{J_i = O - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}}\)
      * </p>
      *
      * <p>
@@ -580,9 +575,6 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
      */
     LEAST_SQUARES
         {
-          private final SimpleVectorValueChecker ALPHA_CONVERGENCE_CHECKER = new SimpleVectorValueChecker(ALPHA_CONVERGENCE_THRESHOLD, ALPHA_CONVERGENCE_THRESHOLD);
-          private final LevenbergMarquardtOptimizer ALPHA_OPTIMIZER = new LevenbergMarquardtOptimizer();
-
           /**
            * {@inheritDoc}
            */
@@ -591,9 +583,9 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
               , final Function<double[], double[]> baselineFunction
               , final BiFunction<double[], Double, double[]> smoothingFunction)
           {
-            return ALPHA_OPTIMIZER.optimize(optimizationModel(observations, baselineFunction, smoothingFunction))
-                                  .getPoint()
-                                  .getEntry(0);
+            return LEAST_SQUARES_OPTIMIZER.optimize(optimizationModel(observations, baselineFunction, smoothingFunction))
+                                          .getPoint()
+                                          .getEntry(0);
           }
 
           /**
@@ -623,19 +615,19 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
               , final BiFunction<double[], Double, double[]> smoothingFunction)
           {
             return new LeastSquaresBuilder()
-                .checkerPair(ALPHA_CONVERGENCE_CHECKER)
-                .maxEvaluations(MAX_ALPHA_OPTIMIZATION_EVALUATIONS)
-                .maxIterations(MAX_ALPHA_OPTIMIZATION_ITERATIONS)
+                .checkerPair(DAMPENING_FACTOR_CONVERGENCE_CHECKER)
+                .maxEvaluations(MAX_OPTIMIZATION_EVALUATIONS)
+                .maxIterations(MAX_OPTIMIZATION_ITERATIONS)
                 .model(optimizationModelFunction(observations, smoothingFunction), optimizationModelJacobian(observations, baselineFunction, smoothingFunction))
                 .parameterValidator(alphaValidator())
                 .target(observations)
-                .start(new double[] { INITIAL_ALPHA })
+                .start(new double[] { INITIAL_DAMPENING_FACTOR })
                 .build();
           }
 
           /**
            * Gets the model function to use for optimizing the value of \(\alpha\),
-           * which is basically just the predicted value for each observed value. The
+           * which is just the predicted value for each observed value. The
            * optimization algorithm then uses the difference between the observed
            * and corresponding predicted values to find the optimal value for
            * \(\alpha\).
@@ -668,7 +660,9 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
            * @param smoothingFunction A function to use for smoothing the
            *                         observations during the optimization
            *                         process.
-           * @return A {@link MultivariateMatrixFunction}.
+           * @return A {@link MultivariateMatrixFunction}, which a
+           * single-column matrix whose elements correspond to the
+           * <i>Jacobian</i> of the model function.
            */
           private MultivariateMatrixFunction optimizationModelJacobian(final double[] observations
               , final Function<double[], double[]> baselineFunction
@@ -702,8 +696,6 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
           }
         };
 
-    protected final double ALPHA_CONVERGENCE_THRESHOLD = 1e-6;
-
     /**
      * Gets a validator that ensures that the value of \(\alpha\) as determined
      * by the optimization algorithm remains within its expected bounds during
@@ -716,15 +708,15 @@ public class SingleExponentialSmoothingForecastModel extends ForecastModel
       return points -> {
         final double alpha = points.getEntry(0);
 
-        return alpha < MIN_ALPHA
-               // If the alpha is below the lower threshold, reset it to the
+        return alpha < MIN_DAMPENING_FACTOR
+               // If alpha is below the lower threshold, reset it to the
                // lower threshold.
-               ? new ArrayRealVector(new double[] { MIN_ALPHA })
-               : alpha > MAX_ALPHA
-                 // If the alpha is above the upper threshold, reset it to the
+               ? new ArrayRealVector(new double[] { MIN_DAMPENING_FACTOR })
+               : alpha > MAX_DAMPENING_FACTOR
+                 // If alpha is above the upper threshold, reset it to the
                  // upper threshold.
-                 ? new ArrayRealVector(new double[] { MAX_ALPHA })
-                 // If the alpha is within its bounds, return its value.
+                 ? new ArrayRealVector(new double[] { MAX_DAMPENING_FACTOR })
+                 // If alpha is within its bounds, return its value.
                  : points;
       };
     }

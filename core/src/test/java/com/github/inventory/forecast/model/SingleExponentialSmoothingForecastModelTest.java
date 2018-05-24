@@ -40,8 +40,8 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
   }
 
   /**
-   * Tests that the single moving average forecast can be correctly generated
-   * for a sample.
+   * Tests that the single exponential smoothing forecast can be correctly
+   * generated for a sample.
    */
   @Test
   public void testForecast()
@@ -89,8 +89,8 @@ public class SingleExponentialSmoothingForecastModelTest extends ForecastModelTe
   }
 
   /**
-   * Tests that the single moving average forecast can be correctly generated
-   * for a sample.
+   * Tests that the single exponential smoothing forecast can be correctly
+   * generated for a sample.
    *
    * @param model The model to use for generating the forecast.
    */

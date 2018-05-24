@@ -79,6 +79,8 @@ public class ForecastController
    */
   private enum ForecastModelEnum
   {
+    DOUBLE_EXPONENTIAL_SMOOTHING(new DoubleExponentialSmoothingForecastModel()),
+
     EXPONENTIAL_WEIGHTED_MOVING_AVERAGE(new ExponentialWeightedMovingAverageForecastModel()),
 
     NAIVE(new NaiveForecastModel()),
