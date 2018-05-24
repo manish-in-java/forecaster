@@ -55,23 +55,30 @@
               // Display a line chart with the sample data.
               new Chart($("#chart")
               , {
-                "data"        : {
-                  "datasets"  : [{
-                    "borderColor"   : "rgb(255, 99, 132)"
-                    , "data"        : observations
-                    , "fill"        : false
-                    , "lineTension" : 0.1
-                    , "label"       : "Input"
+                data              : {
+                  datasets        : [{
+                    borderColor   : "rgb(255, 99, 132)"
+                    , data        : observations
+                    , fill        : false
+                    , lineTension : 0.1
+                    , label       : "Input"
                   }, {
-                    "borderColor"   : "rgb(75, 192, 192)"
-                    , "data"        : predictions
-                    , "fill"        : false
-                    , "lineTension" : 0.1
-                    , "label"       : "Forecast"
+                    borderColor   : "rgb(75, 192, 192)"
+                    , data        : predictions
+                    , fill        : false
+                    , lineTension : 0.1
+                    , label       : "Forecast"
                   }]
-                  , "labels"  : options
+                  , labels        : options
                 }
-                , "type"      : "line"
+                , options         : {
+                  scales          : {
+                    yAxes         : [{
+                      ticks       : { beginAtZero : true }
+                    }]
+                  }
+                }
+                , type            : "line"
               });
             }
           });
