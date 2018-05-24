@@ -17,11 +17,11 @@ package com.github.forecast.model;
 import org.junit.BeforeClass;
 
 /**
- * Unit tests for {@link SimpleAverageForecastModel}.
+ * Unit tests for {@link StraightAverageForecastModel}.
  */
-public class SimpleAverageForecastModelTest extends AverageForecastModelTest
+public class StraightAverageForecastModelTest extends AverageForecastModelTest
 {
-  private static SimpleAverageForecastModel MODEL;
+  private static StraightAverageForecastModel MODEL;
 
   /**
    * Sets up objects required to run the tests.
@@ -29,7 +29,7 @@ public class SimpleAverageForecastModelTest extends AverageForecastModelTest
   @BeforeClass
   public static void setup()
   {
-    MODEL = new SimpleAverageForecastModel();
+    MODEL = new StraightAverageForecastModel();
   }
 
   /**

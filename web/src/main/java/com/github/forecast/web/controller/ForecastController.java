@@ -91,6 +91,8 @@ public class ForecastController
 
     SINGLE_MOVING_AVERAGE(new SingleMovingAverageForecastModel(3)),
 
+    STRAIGHT_AVERAGE(new StraightAverageForecastModel()),
+
     WEIGHTED_AVERAGE(new WeightedAverageForecastModel(new double[] { 4, 3, 2, 1 }));
 
     private final ForecastModel model;
