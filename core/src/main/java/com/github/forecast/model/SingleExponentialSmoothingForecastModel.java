@@ -661,61 +661,70 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      *
      * <p>
      * <br>
-     * \(S_i = S_{i-1} + \alpha(O - S_{i-1})\)
+     * \(S_i = S_{i-1} + \alpha(B_i - S_{i-1})\)
      * <br>
      * </p>
      *
      * <p>
-     * where, \(O\) is some observation or group of observations. Therefore,
+     * where, \(B_i\) is a representation of the observation \(O_i\), referred
+     * to here as the baseline version of that observation. Therefore,
      * </p>
      *
      * <p>
      * <br>
-     * \(J_i = \frac{\partial S_i}{\partial \alpha}\) reduces to (through the rules for partial derivatives and the chain rule of differentiation)
+     * \(J_i = \frac{\partial S_i}{\partial \alpha}\)
      * <br>
-     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
-     * + \alpha{\frac{\partial O}{\partial \alpha}}
-     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
-     * + O{\frac{\partial \alpha}{\partial \alpha}}
-     * - S_{i-1}{\frac{\partial \alpha}{\partial \alpha}}\), or
-     * <br>
-     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
-     * + 0
-     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
-     * + O
-     * - S_{i-1}\) (since \(O\) does not depend on \(\alpha\),
-     * and hence \(\frac{\partial O_i}{\partial \alpha} = 0\)), or
-     * <br>
-     * \(\boxed{J_i = O - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}}\)
-     * </p>
-     *
-     * <p>
-     * Since, \(S_{i-1}\) may be dependent upon \(\alpha\), this formula
-     * needs to be evaluated for each \(S_i\) to calculate the correct
-     * \(J_i\). However, it becomes a recursive procedure, as can be seen
-     * below.
-     * </p>
-     *
-     * <p>
-     * <br>
-     * \(J_1 = \frac{\partial S_1}{\partial \alpha} = 0\), since \(S_1\) is
-     * not dependent upon \(\alpha\)
-     * <br>
-     * \(J_2 = \frac{\partial S_2}{\partial \alpha} = O - S_1 + (1 - \alpha)\frac{\partial S_1}{\partial \alpha}\)
-     * <br>
-     * \(J_3 = \frac{\partial S_3}{\partial \alpha} = O - S_2 + (1 - \alpha)\frac{\partial S_2}{\partial \alpha}\)
-     * <br>
-     * \(J_4 = \frac{\partial S_4}{\partial \alpha} = O - S_3 + (1 - \alpha)\frac{\partial S_3}{\partial \alpha}\)
+     * becomes
      * <br><br>
-     * and so on.
+     * \(J_i = \frac{\partial (S_{i-1} + \alpha(B_i - S_{i-1}))}{\partial \alpha}\),
+     * <br>
+     * or (by the associative rule of differentiation)
+     * <br><br>
+     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha(B_i - S_{i-1}))}{\partial \alpha}\),
+     * <br>
+     * or (by the associative rule of differentiation)
+     * <br><br>
+     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha{B_i})}{\partial \alpha} - \frac{\partial (\alpha{S_{i-1}})}{\partial \alpha}\),
+     * <br>
+     * or (by the chain rule of differentiation)
+     * <br><br>
+     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
+     * + \alpha{\frac{\partial B_i}{\partial \alpha}}
+     * + B_i{\frac{\partial \alpha}{\partial \alpha}}
+     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
+     * - S_{i-1}{\frac{\partial \alpha}{\partial \alpha}}\),
+     * <br>
+     * or (upon simplification)
+     * <br><br>
+     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
+     * + B_i
+     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
+     * - S_{i-1}\)
+     * <br>
+     * (since \(\frac{\partial B_i}{\partial \alpha} = 0\), given that
+     * \(B_i\), which is only dependent upon the observations does not
+     * depend on \(\alpha\)), or (upon rearrangement of terms)
+     * <br><br>
+     * \(J_i = B_i - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}\),
+     * <br>
+     * or, using the fact that \(\frac{\partial S_{i-1}}{\partial \alpha} = J_{i-1}\)
+     * <br><br>
+     * \(\boxed{J_i = B_i - S_{i-1} + (1 - \alpha)J_{i-1}}\)
      * </p>
      *
-     * @param observations      The observations for which the optimal value of
-     *                          \(\alpha\) is required.
-     * @param baselineFunction  A function that prepares a baseline for
-     *                          the observations. The baseline in turn is
-     *                          used to generate predictions for the
-     *                          observations and also to optimize the
+     * <p>
+     * Since \(S_1\) is not dependent upon \(\alpha\),
+     * \(J_1 = \frac{\partial S_1}{\partial \alpha} = 0\). This gives an
+     * initial value for the Jacobian that can be used to derive the rest
+     * using the recursive formula derived above.
+     * </p>
+     *
+     * @param observations      The observations (\(O_i\)) for which the
+     *                          optimal value of \(\alpha\) is required.
+     * @param baselineFunction  A function that prepares a baseline \(B_i\)
+     *                          for each observation \(O_i\). The baseline
+     *                          in turn is used to generate predictions for
+     *                          the observations and also to optimize the
      *                          value of \(\alpha\) through an iterative
      *                          process that attempts to solve the
      *                          least-squares problem.
