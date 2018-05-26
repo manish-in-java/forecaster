@@ -27,8 +27,8 @@ import java.util.Arrays;
 /**
  * <p>
  * Generates forecast for a sample that contains upward and/or downward trends,
- * using double exponential smoothing, where an observation \(O\) is dampened
- * exponentially to get a smooth version \(S\) as
+ * using double exponential smoothing, where an observation \(\bf O\) is
+ * dampened exponentially to get a smooth version \(\bf S\) as
  * </p>
  *
  * <p>
@@ -39,12 +39,12 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * where, \(i\) is an index that ranges from {@literal 1} to the number of
- * observations in the sample, \(O_i\) is the {@literal i-th} observation,
- * \(S_i\) its smooth version, \(\alpha\) and \(\beta\) are dampening factors
- * between \(0\) and \(1\) responsible for smoothing out the observations, and
- * \(T_i\) is an estimate of the upward or downward trend for the
- * {@literal i-th} observation. This means
+ * where, \(\bf i\) is an index that ranges from {@literal 1} to the number of
+ * observations in the sample, \(\bf O_i\) is the {@literal i-th} observation,
+ * \(\bf S_i\) its smooth version, \(\bf \alpha\) and \(\bf \beta\) are
+ * dampening factors between \(\bf 0.0\) and \(\bf 1.0\) responsible for
+ * smoothing out the observations, and \(\bf T_i\) is an estimate of the upward
+ * or downward trend for the {@literal i-th} observation. This means
  * </p>
  *
  * <p>
@@ -77,9 +77,9 @@ import java.util.Arrays;
  * <br>
  * \(\large \boxed{T_1 = \frac{O_n - O_1}{n - 1}}\),
  * <br><br>
- * where, \(n\) is the number of observations in the sample, \(O_1\) is the
- * first (chronologically oldest) observation, and \(O_n\) is the last
- * (chronologically latest) observation.
+ * where, \(\bf n\) is the number of observations in the sample, \(\bf O_1\)
+ * is the first (chronologically oldest) observation, and \(\bf O_n\) is the
+ * last (chronologically latest) observation.
  * </p>
  *
  * <p>

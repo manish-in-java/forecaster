@@ -37,8 +37,8 @@ import java.util.function.Function;
 /**
  * <p>
  * Generates forecast for a sample using exponential smoothing, where an
- * observation \(O\) is dampened exponentially to get a smooth version \(S\)
- * as
+ * observation \(\bf O\) is dampened exponentially to get a smooth version
+ * \(\bf S\) as
  * </p>
  *
  * <p>
@@ -56,10 +56,11 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * where, \(i\) is an index that ranges from {@literal 1} to the number of
- * observations in the sample, \(O_i\) is the {@literal i-th} observation,
- * \(S_i\) its smooth version, and \(\alpha\) is a dampening factor between
- * \(0\) and \(1\) responsible for smoothing out the observations. This means
+ * where, \(\bf i\) is an index that ranges from {@literal 1} to the number of
+ * observations in the sample, \(\bf O_i\) is the {@literal i-th} observation,
+ * \(\bf S_i\) its smooth version, and \(\bf \alpha\) is a dampening factor
+ * between \(\bf 0.0\) and \(\bf 1.0\) responsible for smoothing out the
+ * observations. This means
  * </p>
  *
  * <p>
