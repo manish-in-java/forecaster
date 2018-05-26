@@ -56,11 +56,15 @@ abstract class AverageForecastModelTest extends ForecastModelTest
     }
 
     // Ensure that the accuracy measures have been calculated.
-    assertNotEquals(0.0, subject.getBias());
     assertNotEquals(0.0, subject.getMeanAbsoluteDeviation());
     assertNotEquals(0.0, subject.getMeanAbsolutePercentageError());
     assertNotEquals(0.0, subject.getMeanSquaredError());
     assertNotEquals(0.0, subject.getTotalAbsoluteError());
     assertNotEquals(0.0, subject.getTotalSquaredError());
+
+    // The following test should not be performed for averaging models
+    // as the bias could be zero if the observations are equally distributed
+    // on either side of the average.
+    // assertNotEquals(0.0, subject.getBias());
   }
 }
