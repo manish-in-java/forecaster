@@ -43,7 +43,7 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(\boxed{S_i = \alpha{O_{i-1}} + (1 - \alpha)S_{i-1}}\)
+ * \(\large \boxed{S_i = \alpha{O_{i-1}} + (1 - \alpha)S_{i-1}}\)
  * <br>
  * </p>
  *
@@ -51,7 +51,7 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(\boxed{S_i = S_{i-1} + \alpha({O_{i-1}} - S_{i-1})}\)
+ * \(\large \boxed{S_i = S_{i-1} + \alpha({O_{i-1}} - S_{i-1})}\)
  * <br>
  * </p>
  *
@@ -63,11 +63,11 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * \(S_2 = \alpha{O_1} + (1 - \alpha)S_1\)
+ * \(\large S_2 = \alpha{O_1} + (1 - \alpha)S_1\)
  * <br>
- * \(S_3 = \alpha{O_2} + (1 - \alpha)S_2\)
+ * \(\large S_3 = \alpha{O_2} + (1 - \alpha)S_2\)
  * <br>
- * \(S_4 = \alpha{O_3} + (1 - \alpha)S_3\)
+ * \(\large S_4 = \alpha{O_3} + (1 - \alpha)S_3\)
  * <br>
  * ... and so on.
  * </p>
@@ -661,7 +661,7 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      *
      * <p>
      * <br>
-     * \(S_i = S_{i-1} + \alpha(B_i - S_{i-1})\)
+     * \(\large S_i = S_{i-1} + \alpha(B_i - S_{i-1})\)
      * <br>
      * </p>
      *
@@ -672,23 +672,23 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      *
      * <p>
      * <br>
-     * \(J_i = \frac{\partial S_i}{\partial \alpha}\)
+     * \(\large J_i = \frac{\partial S_i}{\partial \alpha}\)
      * <br>
      * becomes
      * <br><br>
-     * \(J_i = \frac{\partial (S_{i-1} + \alpha(B_i - S_{i-1}))}{\partial \alpha}\),
+     * \(\large J_i = \frac{\partial (S_{i-1} + \alpha(B_i - S_{i-1}))}{\partial \alpha}\),
      * <br>
      * or (by the associative rule of differentiation)
      * <br><br>
-     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha(B_i - S_{i-1}))}{\partial \alpha}\),
+     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha(B_i - S_{i-1}))}{\partial \alpha}\),
      * <br>
      * or (by the associative rule of differentiation)
      * <br><br>
-     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha{B_i})}{\partial \alpha} - \frac{\partial (\alpha{S_{i-1}})}{\partial \alpha}\),
+     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha{B_i})}{\partial \alpha} - \frac{\partial (\alpha{S_{i-1}})}{\partial \alpha}\),
      * <br>
      * or (by the chain rule of differentiation)
      * <br><br>
-     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
+     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha}
      * + \alpha{\frac{\partial B_i}{\partial \alpha}}
      * + B_i{\frac{\partial \alpha}{\partial \alpha}}
      * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
@@ -696,7 +696,7 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      * <br>
      * or (upon simplification)
      * <br><br>
-     * \(J_i = \frac{\partial S_{i-1}}{\partial \alpha}
+     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha}
      * + B_i
      * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
      * - S_{i-1}\)
@@ -705,11 +705,11 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      * \(B_i\), which is only dependent upon the observations does not
      * depend on \(\alpha\)), or (upon rearrangement of terms)
      * <br><br>
-     * \(J_i = B_i - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}\),
+     * \(\large J_i = B_i - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}\),
      * <br>
      * or, using the fact that \(\frac{\partial S_{i-1}}{\partial \alpha} = J_{i-1}\)
      * <br><br>
-     * \(\boxed{J_i = B_i - S_{i-1} + (1 - \alpha)J_{i-1}}\)
+     * \(\large \boxed{J_i = B_i - S_{i-1} + (1 - \alpha)J_{i-1}}\)
      * </p>
      *
      * <p>

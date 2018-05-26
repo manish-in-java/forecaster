@@ -26,16 +26,16 @@ import java.util.Arrays;
 
 /**
  * <p>
- * Generates forecast for a sample using double exponential smoothing, where
- * an observation \(O\) is dampened exponentially to get a smooth version \(S\)
- * as
+ * Generates forecast for a sample that contains upward and/or downward trends,
+ * using double exponential smoothing, where an observation \(O\) is dampened
+ * exponentially to get a smooth version \(S\) as
  * </p>
  *
  * <p>
  * <br>
- * \(\boxed{S_i = \alpha{O_i} + (1 - \alpha)(S_{i-1} + T_{i-1})}\), and
+ * \(\large \boxed{S_i = \alpha{O_i} + (1 - \alpha)(S_{i-1} + T_{i-1})}\), and
  * <br>
- * \(\boxed{T_i = \beta(S_i - S_{i-1}) + (1 - \beta)T_{i-1}}\)
+ * \(\large \boxed{T_i = \beta(S_i - S_{i-1}) + (1 - \beta)T_{i-1}}\)
  * </p>
  *
  * <p>
@@ -48,21 +48,21 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * \(S_2 = \alpha{O_2} + (1 - \alpha)(S_1 + T_1)\)
+ * \(\large S_2 = \alpha{O_2} + (1 - \alpha)(S_1 + T_1)\)
  * <br>
- * \(S_3 = \alpha{O_3} + (1 - \alpha)(S_2 + T_2)\)
+ * \(\large S_3 = \alpha{O_3} + (1 - \alpha)(S_2 + T_2)\)
  * <br>
- * \(S_4 = \alpha{O_4} + (1 - \alpha)(S_3 + T_2)\)
+ * \(\large S_4 = \alpha{O_4} + (1 - \alpha)(S_3 + T_2)\)
  * <br>
  * ... and so on, and
  * </p>
  *
  * <p>
- * \(T_2 = \beta(S_2 - S_1) + (1 - \beta)T_1\)
+ * \(\large T_2 = \beta(S_2 - S_1) + (1 - \beta)T_1\)
  * <br>
- * \(T_3 = \beta(S_3 - S_2) + (1 - \beta)T_2\)
+ * \(\large T_3 = \beta(S_3 - S_2) + (1 - \beta)T_2\)
  * <br>
- * \(T_4 = \beta(S_4 - S_3) + (1 - \beta)T_3\)
+ * \(\large T_4 = \beta(S_4 - S_3) + (1 - \beta)T_3\)
  * <br>
  * ... and so on.
  * </p>
@@ -73,9 +73,9 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\boxed{S_1 = O_1}\), and
+ * \(\large \boxed{S_1 = O_1}\), and
  * <br>
- * \(\boxed{T_1 = \frac{O_n - O_1}{n - 1}}\),
+ * \(\large \boxed{T_1 = \frac{O_n - O_1}{n - 1}}\),
  * <br><br>
  * where, \(n\) is the number of observations in the sample, \(O_1\) is the
  * first (chronologically oldest) observation, and \(O_n\) is the last
@@ -123,6 +123,37 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
     }
 
     return forecast(observations, predictions);
+  }
+
+  /**
+   * <p>
+   * Gets an estimate for the overall trend for a collection of observations,
+   * which is a measure of whether the data moved upwards or downwards from
+   * the first observation to the last.
+   * </p>
+   *
+   * <p>
+   * The trend is calculated as
+   * </p>
+   *
+   * <p>
+   * <br>
+   * \(\large T_1 = \frac{O_n - O_1}{n - 1}\)
+   * <br>
+   * </p>
+   *
+   * <p>
+   * where, \(n\) is the number of observations, \(O_1\) is the first
+   * (chronologically oldest) observation, and \(O_n\) is the last
+   * (chronologically latest) observation.
+   * </p>
+   *
+   * @param observations The observations for which the trend is required.
+   * @return An estimate for the overall trend for the specified observations.
+   */
+  private double estimatedTrend(final double[] observations)
+  {
+    return (observations[observations.length - 1] - observations[0]) / Math.max(1, observations.length - 1);
   }
 
   /**
@@ -228,9 +259,9 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(J_{i\alpha}\), defined as \(\boxed{J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}}\), and
+   * \(\large J_{i\alpha}\), defined as \(\boxed{J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}}\), and
    * <br>
-   * \(J_{i\beta}\), defined as \(\boxed{J_{i\beta} = \frac{\partial S_i}{\partial \beta}}\).
+   * \(\large J_{i\beta}\), defined as \(\boxed{J_{i\beta} = \frac{\partial S_i}{\partial \beta}}\).
    * <br>
    * </p>
    *
@@ -241,7 +272,7 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(S_i = \alpha{O_i} + (1 - \alpha)(S_{i-1} + T_{i-1})\)
+   * \(\large S_i = \alpha{O_i} + (1 - \alpha)(S_{i-1} + T_{i-1})\)
    * <br>
    * </p>
    *
@@ -251,15 +282,19 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}\) becomes (through the rules for partial derivatives and the chain rule of differentiation)
+   * \(\large J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}\)
    * <br>
-   * \(J_{i\alpha} = \alpha{\frac{\partial O_i}{\partial \alpha}} + O_i{\frac{\partial \alpha}{\partial \alpha}}
+   * becomes (through the rules for partial derivatives and the chain rule of
+   * differentiation)
+   * <br><br>
+   * \(\large J_{i\alpha} = \alpha{\frac{\partial O_i}{\partial \alpha}} + O_i{\frac{\partial \alpha}{\partial \alpha}}
    * + (1 - \alpha)(\frac{\partial S{i-1}}{\partial \alpha} + \frac{\partial T{i-1}}{\partial \alpha})
-   * - (S_{i-1} + T_{i-1}){\frac{\partial \alpha}{\partial \alpha}}\), or
+   * - (S_{i-1} + T_{i-1}){\frac{\partial \alpha}{\partial \alpha}}\),
    * <br>
-   * \(\boxed{J_{i\alpha} = O_i - S_{i-1} - T_{i-1} + (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial T_{i-1}}{\partial \alpha})}\)
-   * (since \(O_i\) does not depend on \(\alpha\), and hence
-   * \(\frac{\partial O_i}{\partial \alpha} = 0\))
+   * or (since \(\frac{\partial O_i}{\partial \alpha} = 0\), given that \(O_i\)
+   * does not depend on \(\alpha\))
+   * <br><br>
+   * \(\large \boxed{J_{i\alpha} = O_i - S_{i-1} - T_{i-1} + (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial T_{i-1}}{\partial \alpha})}\)
    * </p>
    *
    * <p>
@@ -268,11 +303,12 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(J_{i\beta} = \frac{\partial S_i}{\partial \beta}\) becomes
+   * \(\large J_{i\beta} = \frac{\partial S_i}{\partial \beta}\)
    * <br>
-   * \(\boxed{J_{i\beta} = (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \beta} + \frac{\partial T_{i-1}}{\partial \beta})}\)
-   * (since \(O_i\) and \(\alpha\) do not depend on \(\beta\), and hence
-   * \(\frac{\partial O_i}{\partial \beta} = \frac{\partial \alpha}{\partial \beta} = 0\))
+   * becomes (since \(\frac{\partial O_i}{\partial \beta} = \frac{\partial \alpha}{\partial \beta} = 0\),
+   * given that \(O_i\) and \(\alpha\) do not depend on \(\beta\))
+   * <br><br>
+   * \(\large \boxed{J_{i\beta} = (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \beta} + \frac{\partial T_{i-1}}{\partial \beta})}\)
    * </p>
    *
    * <p>
@@ -283,17 +319,17 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\boxed{\frac{\partial T_i}{\partial \alpha} = \beta(\frac{\partial S_i}{\partial \alpha} - \frac{\partial S_{i-1}}{\partial \alpha})
+   * \(\large \boxed{\frac{\partial T_i}{\partial \alpha} = \beta(\frac{\partial S_i}{\partial \alpha} - \frac{\partial S_{i-1}}{\partial \alpha})
    * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \alpha}}\), and
    * </p>
    *
    * <p>
    * <br>
-   * \(\frac{\partial T_i}{\partial \beta} = \beta(\frac{\partial S_i}{\partial \beta} - \frac{\partial S_{i-1}}{\partial \beta})
+   * \(\large \frac{\partial T_i}{\partial \beta} = \beta(\frac{\partial S_i}{\partial \beta} - \frac{\partial S_{i-1}}{\partial \beta})
    * + (S_i - S_{i-1})\frac{\partial \beta}{\partial \beta}
    * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \beta} - T_{i-1}\frac{\partial \beta}{\partial \beta}\), or
    * <br>
-   * \(\boxed{\frac{\partial T_i}{\partial \beta} = S_i - S_{i-1} - T_{i-1}
+   * \(\large \boxed{\frac{\partial T_i}{\partial \beta} = S_i - S_{i-1} - T_{i-1}
    * + \beta(\frac{\partial S_i}{\partial \beta} - \frac{\partial S_{i-1}}{\partial \beta})
    * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \beta}
    * }\)
@@ -306,14 +342,14 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\boxed{\frac{\partial O_1}{\partial \alpha} =
+   * \(\large \boxed{\frac{\partial O_1}{\partial \alpha} =
    * \frac{\partial O_1}{\partial \beta} =
    * \frac{\partial T_1}{\partial \alpha} =
    * \frac{\partial T_1}{\partial \beta} =
    * 0}\)
    * </p>
    *
-   * @param observations The observations for which optimal values of
+   * @param observations The observations \(O_i\) for which optimal values of
    *                     \(\alpha\) and \(\beta\) are required.
    * @return A {@link MultivariateMatrixFunction}, which is a two-column
    * matrix whose first column contains elements corresponding to the
@@ -338,7 +374,7 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
       final double[][] trend = new double[observations.length][3];
 
       // Set the initial guess for the trend.
-      trend[0][0] = overallTrend(observations);
+      trend[0][0] = estimatedTrend(observations);
 
       final double[][] jacobian = new double[observations.length][2];
 
@@ -410,37 +446,6 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
   }
 
   /**
-   * <p>
-   * Gets the overall trend for a collection of observations, which is a simple
-   * measure of whether the data moved upwards or downwards from the first
-   * observation to the last.
-   * </p>
-   *
-   * <p>
-   * The trend is calculated as
-   * </p>
-   *
-   * <p>
-   * <br>
-   * \(T = \frac{O_n - O_1}{n - 1}\)
-   * <br>
-   * </p>
-   *
-   * <p>
-   * where, \(n\) is the number of observations, \(O_1\) is the first
-   * (chronologically oldest) observation, and \(O_n\) is the last
-   * (chronologically latest) observation.
-   * </p>
-   *
-   * @param observations The observations for which the trend is required.
-   * @return The overall trend for a collection of observations.
-   */
-  private double overallTrend(final double[] observations)
-  {
-    return (observations[observations.length - 1] - observations[0]) / Math.max(1, observations.length - 1);
-  }
-
-  /**
    * Smoothens a collection of observations by exponentially dampening them
    * using factors \(\alpha\) and \(\beta\).
    *
@@ -460,7 +465,7 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
     smoothed[0][0] = observations[0];
 
     // Estimate the overall trend using the first and last observations.
-    smoothed[1][0] = overallTrend(observations);
+    smoothed[1][0] = estimatedTrend(observations);
 
     // Generate the rest using the smoothing formula.
     for (int i = 1; i < observations.length; ++i)
