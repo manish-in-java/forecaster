@@ -336,14 +336,14 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * </p>
    *
    * <p>
-   * Due to the choice for \(O_1\) and \(T_1\), neither of which depends on
+   * Due to the choice for \(S_1\) and \(T_1\), neither of which depends on
    * \(\alpha\) or \(\beta\),
    * </p>
    *
    * <p>
    * <br>
-   * \(\large \boxed{\frac{\partial O_1}{\partial \alpha} =
-   * \frac{\partial O_1}{\partial \beta} =
+   * \(\large \boxed{\frac{\partial S_1}{\partial \alpha} =
+   * \frac{\partial S_1}{\partial \beta} =
    * \frac{\partial T_1}{\partial \alpha} =
    * \frac{\partial T_1}{\partial \beta} =
    * 0}\)

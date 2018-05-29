@@ -645,8 +645,8 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      * used for optimizing the value of \(\alpha\). The <i>Jacobian</i> for a
      * function \(S\) of \(k\) parameters \(x_k\) is a matrix, where an element
      * \(J_{ik}\) of the matrix is given by
-     * \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), where, \(x_k\) are
-     * the \(k\) parameters on which the function \(S\) is dependent, and
+     * \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), \(x_k\) are the
+     * \(k\) parameters on which the function \(S\) is dependent, and
      * \(S_i\) are the values of the function \(S\) at \(i\) distinct points.
      * In the case of single exponential smoothing forecast models, there
      * is only one parameter \(\alpha\) that impacts the predicted value for
