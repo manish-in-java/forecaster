@@ -57,13 +57,13 @@
               , {
                 data              : {
                   datasets        : [{
-                    borderColor   : "rgb(255, 99, 132)"
+                    borderColor   : "#FFC800"
                     , data        : observations
                     , fill        : false
                     , lineTension : 0.1
-                    , label       : "Input"
+                    , label       : "Data points"
                   }, {
-                    borderColor   : "rgb(75, 192, 192)"
+                    borderColor   : "#009F8B"
                     , data        : predictions
                     , fill        : false
                     , lineTension : 0.1
