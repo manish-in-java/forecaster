@@ -63,12 +63,14 @@ public class SimpleAverageForecastModel extends ForecastModel
   @Override
   Forecast forecast(final double[] observations, final int projections)
   {
-    final double[] predictions = new double[observations.length + projections];
+    final int samples = observations.length;
+
+    final double[] predictions = new double[samples + projections];
 
     double prediction = 0.0;
 
     // Generate predictions for each observation.
-    for (int i = 0; i < observations.length; ++i)
+    for (int i = 0; i < samples; ++i)
     {
       // Add the simple average for the observations encountered so far
       // to the forecast.
@@ -76,18 +78,7 @@ public class SimpleAverageForecastModel extends ForecastModel
     }
 
     // Add specified number of predictions beyond the sample.
-    for (int i = 0; i < projections; ++i)
-    {
-      // Extend the sample to the required number of projections.
-      final double[] extended = Arrays.copyOf(predictions, observations.length + i + 1);
-
-      // Set the last value of the extended sample to the previous prediction.
-      extended[observations.length + i] = prediction;
-
-      // Find the simple average for the extended sample and add it to the
-      // forecast.
-      predictions[observations.length + i] = prediction = simpleAverage(extended);
-    }
+    Arrays.fill(predictions, samples, samples + projections, prediction);
 
     return forecast(observations, predictions);
   }
