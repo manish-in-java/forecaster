@@ -93,6 +93,8 @@ public class ForecastController
 
     STRAIGHT_AVERAGE(new StraightAverageForecastModel()),
 
+    TRIPLE_EXPONENTIAL_SMOOTHING(new TripleExponentialSmoothingForecastModel(4)),
+
     WEIGHTED_AVERAGE(new WeightedAverageForecastModel(new double[] { 4, 3, 2, 1 }));
 
     private final ForecastModel model;

@@ -110,16 +110,17 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
     final double[] optimalDampeningFactors = optimalDampeningFactors(observations);
 
     // Smoothen the observations using the optimal values for alpha and beta.
-    final double[][] smoothed = smoothenObservations(observations, optimalDampeningFactors[0], optimalDampeningFactors[1]);
+    final double[][] processed = smoothenObservations(observations, optimalDampeningFactors[0], optimalDampeningFactors[1]);
+    final double[] smoothed = processed[0], trend = processed[1];
 
     // Add the smooth observations as the predictions for the known
     // observations.
-    final double[] predictions = Arrays.copyOf(smoothed[0], observations.length + projections);
+    final double[] predictions = Arrays.copyOf(smoothed, observations.length + projections);
 
     // Add specified number of predictions beyond the sample.
     for (int i = 0; i < projections; ++i)
     {
-      predictions[observations.length + i] = smoothed[0][observations.length - 1] + (i + 1) * smoothed[1][observations.length - 1];
+      predictions[observations.length + i] = smoothed[observations.length - 1] + (i + 1) * trend[observations.length - 1];
     }
 
     return forecast(observations, predictions);
@@ -191,15 +192,15 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * \(\alpha\) and \(\beta\), and produce predictions for each of the
    * observations with those values of the dampening factors. This is
    * known as the model function for the algorithm. The algorithm internally
-   * calculates the MSE for each value of \(\alpha\) by using the given
-   * observations and their corresponding predictions for the specified
-   * values of \(\alpha\) and \(beta\);</li>
+   * calculates the MSE for each set of values of the dampening factors by
+   * using the given observations and their corresponding predictions for the
+   * specified values of \(\alpha\) and \(beta\);</li>
    * <li>A function that can take the observations and some values for
    * \(\alpha\) and \(\beta\), and produce a <i>Jacobian</i> for each
    * prediction made by the model function. The <i>Jacobian</i> is a linear
    * approximation of the derivative of a predicted value with respect
-   * to the variable parameter \(\alpha\) and hence serves to determine
-   * whether the trend at each predicted value matches that of the
+   * to the variable parameters \(\alpha\) and \(\beta\) and hence serves to
+   * determine whether the trend at each predicted value matches that of the
    * corresponding observed value. This information is critical in optimizing
    * the values of \(\alpha\) and \(beta\) as the derivative determines
    * whether the values are too high or too low, and therefore whether
@@ -261,8 +262,21 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * <br>
    * \(\large J_{i\alpha}\), defined as \(\boxed{J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}}\), and
    * <br>
-   * \(\large J_{i\beta}\), defined as \(\boxed{J_{i\beta} = \frac{\partial S_i}{\partial \beta}}\).
+   * \(\large J_{i\beta}\), defined as \(\boxed{J_{i\beta} = \frac{\partial S_i}{\partial \beta}}\), or
    * <br>
+   * </p>
+   *
+   * <p>
+   * \(\large J = \begin{bmatrix}
+   * J_{1\alpha} &amp; J_{2\alpha} &amp; ... &amp; J_{n\alpha}
+   * \\
+   * J_{1\beta} &amp; J_{2\beta} &amp; ... &amp; J_{n\beta}
+   * \end{bmatrix}
+   * = \begin{bmatrix}
+   * \frac{\partial S_1}{\partial \alpha} &amp; \frac{\partial S_2}{\partial \alpha} &amp; ... &amp; \frac{\partial S_n}{\partial \alpha}
+   * \\
+   * \frac{\partial S_1}{\partial \beta} &amp; \frac{\partial S_2}{\partial \beta} &amp; ... &amp; \frac{\partial S_n}{\partial \beta}
+   * \end{bmatrix}\)
    * </p>
    *
    * <p>
@@ -368,39 +382,38 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
       final double alpha = params[0], beta = params[1];
 
       // Smoothen the observations.
-      final double[] smoothed = smoothenObservations(observations, alpha, beta)[0];
+      final double[][] processed = smoothenObservations(observations, alpha, beta);
+      final double[] smoothed = processed[0], trend = processed[1];
 
-      // Prepare to track the trend with respect to the model parameters.
-      final double[][] trend = new double[observations.length][3];
+      // Determine the sample size.
+      final int samples = observations.length;
 
-      // Set the initial guess for the trend.
-      trend[0][0] = estimatedTrend(observations);
+      // Prepare to track the changes in trend with respect to the model
+      // parameters.
+      final double[] trendDerivativesAlpha = new double[samples], trendDerivativesBeta = new double[samples];
 
-      final double[][] jacobian = new double[observations.length][2];
+      final double[][] jacobian = new double[samples][2];
 
       // The first elements of the Jacobian are zero as they are not dependent
       // upon the dampening factors, and so are the initial derivatives of the
-      // trend which respect to those factors.
-      jacobian[0][0] = jacobian[0][1] = trend[0][1] = trend[0][2] = 0.0;
+      // trend with respect to those factors.
+      jacobian[0][0] = jacobian[0][1] = trendDerivativesAlpha[0] = trendDerivativesBeta[0] = 0.0;
 
       // Calculate the rest of the Jacobian using the current observation
       // and the immediately previous prediction.
       for (int i = 1; i < jacobian.length; ++i)
       {
         // Set the Jacobian with respect to alpha.
-        jacobian[i][0] = observations[i] - smoothed[i - 1] - trend[i - 1][0] + (1 - alpha) * (jacobian[i - 1][0] + trend[i - 1][1]);
+        jacobian[i][0] = observations[i] - smoothed[i - 1] - trend[i - 1] + (1 - alpha) * (jacobian[i - 1][0] + trendDerivativesAlpha[i - 1]);
 
         // Set the Jacobian with respect to beta.
-        jacobian[i][1] = (1 - alpha) * (jacobian[i - 1][1] + trend[i - 1][2]);
-
-        // Adjust the trend.
-        trend[i][0] = beta * (smoothed[i] - smoothed[i - 1]) + (1 - beta) * trend[i - 1][0];
+        jacobian[i][1] = (1 - alpha) * (jacobian[i - 1][1] + trendDerivativesBeta[i - 1]);
 
         // Adjust the derivative of the trend with respect to alpha.
-        trend[i][1] = beta * (jacobian[i][0] - jacobian[i - 1][0]) + (1 - beta) * trend[i - 1][1];
+        trendDerivativesAlpha[i] = beta * (jacobian[i][0] - jacobian[i - 1][0]) + (1 - beta) * trendDerivativesAlpha[i - 1];
 
         // Adjust the derivative of the trend with respect to beta.
-        trend[i][2] = smoothed[i] - smoothed[i - 1] - trend[i - 1][0] + beta * (jacobian[i][1] - jacobian[i - 1][1]) + (1 - beta) * trend[i - 1][2];
+        trendDerivativesBeta[i] = smoothed[i] - smoothed[i - 1] - trend[i - 1] + beta * (jacobian[i][1] - jacobian[i - 1][1]) + (1 - beta) * trendDerivativesBeta[i - 1];
       }
 
       return jacobian;
@@ -453,29 +466,31 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * @param alpha        The dampening factor \(\alpha\).
    * @param beta         The dampening factor \(\beta\).
    * @return A two-dimension array where the first dimension contains the
-   * smoothened observations corresponding to the observations, and the second
-   * dimension contains an estimate of the trend at each of the observed
-   * points.
+   * smoothened observations, and the second dimension contains an estimate of
+   * the trend at each of the observed points.
    */
   private double[][] smoothenObservations(final double[] observations, final double alpha, final double beta)
   {
-    final double[][] smoothed = new double[2][observations.length];
+    // Determine the sample size.
+    final int samples = observations.length;
+
+    final double[] smoothed = new double[samples], trend = new double[samples];
 
     // Use the first observation as the first smooth observation.
-    smoothed[0][0] = observations[0];
+    smoothed[0] = observations[0];
 
     // Estimate the overall trend using the first and last observations.
-    smoothed[1][0] = estimatedTrend(observations);
+    trend[0] = estimatedTrend(observations);
 
     // Generate the rest using the smoothing formula.
-    for (int i = 1; i < observations.length; ++i)
+    for (int i = 1; i < samples; ++i)
     {
-      smoothed[0][i] = alpha * observations[i] + (1 - alpha) * (smoothed[0][i - 1] + smoothed[1][i - 1]);
+      smoothed[i] = alpha * observations[i] + (1 - alpha) * (smoothed[i - 1] + trend[i - 1]);
 
       // Update the trend.
-      smoothed[1][i] = beta * (smoothed[0][i] - smoothed[0][i - 1]) + (1 - beta) * smoothed[1][i - 1];
+      trend[i] = beta * (smoothed[i] - smoothed[i - 1]) + (1 - beta) * trend[i - 1];
     }
 
-    return smoothed;
+    return new double[][] { smoothed, trend };
   }
 }

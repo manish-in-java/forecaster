@@ -61,9 +61,9 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * This variation, also known by its short form {@literal EWMA} is
- * characterized by a direct dependence of \(S_i\) upon \(O_i\), and was
- * originally proposed in {@literal 1959} by {@literal S.W. Roberts}.
+ * This variation, also known by its short form <i>EWMA</i> is characterized
+ * by a direct dependence of \(S_i\) upon \(O_i\), and was originally proposed
+ * in <i>1959</i> by <i>S.W. Roberts</i>.
  * </p>
  *
  * <p>

@@ -80,7 +80,7 @@ import java.util.function.Function;
  *
  * <p>
  * This model, characterized by a dependence of \(S_i\) upon \(O_{i-1}\) was
- * originally proposed in {@literal 1986} by {@literal J. Stuart Hunter}.
+ * originally proposed in <i>1986</i> by <i>J. Stuart Hunter</i>.
  * </p>
  *
  * <p>
@@ -652,7 +652,12 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
      * is only one parameter \(\alpha\) that impacts the predicted value for
      * a given observed value. Therefore, the <i>Jacobian</i> (\(J\)) depends
      * on only this one parameter \(\alpha\) and thereby reduces to
-     * \(\boxed{J_i = \frac{\partial S_i}{\partial \alpha}}\).
+     * \(\boxed{J_i = \frac{\partial S_i}{\partial \alpha}}\), or
+     * </p>
+     *
+     * <p>
+     * \(\large J = \begin{bmatrix}J_1 &amp; J_2 &amp; ... &amp; J_n \end{bmatrix}
+     * = \begin{bmatrix}\frac{\partial S_1}{\partial \alpha} &amp; \frac{\partial S_2}{\partial \alpha} &amp; ... &amp; \frac{\partial S_n}{\partial \alpha} \end{bmatrix}\)
      * </p>
      *
      * <p>
