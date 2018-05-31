@@ -37,13 +37,13 @@ import java.util.function.Function;
 /**
  * <p>
  * Generates forecast for a sample using exponential smoothing, where an
- * observation \(\bf O\) is dampened exponentially to get a smooth version
- * \(\bf S\) as
+ * observation \(\bf y\) is dampened exponentially to get a smooth version
+ * \(\bf l\) as
  * </p>
  *
  * <p>
  * <br>
- * \(\large \boxed{S_i = \alpha{O_{i-1}} + (1 - \alpha)S_{i-1}}\)
+ * \(\large \boxed{l_t = \alpha{y_{t-1}} + (1 - \alpha)l_{t-1}}\)
  * <br>
  * </p>
  *
@@ -51,35 +51,35 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(\large \boxed{S_i = S_{i-1} + \alpha({O_{i-1}} - S_{i-1})}\)
+ * \(\large \boxed{l_t = l_{t-1} + \alpha({y_{t-1}} - l_{t-1})}\)
  * <br>
  * </p>
  *
  * <p>
- * where, \(\bf i\) is an index that ranges from {@literal 1} to the number of
- * observations in the sample, \(\bf O_i\) is the {@literal i-th} observation,
- * \(\bf S_i\) its smooth version, and \(\bf \alpha\) is a dampening factor
+ * where, \(\bf t\) is an index that ranges from {@literal 1} to the number of
+ * observations in the sample, \(\bf y_t\) is the {@literal t-th} observation,
+ * \(\bf l_t\) its smooth version, and \(\bf \alpha\) is a dampening factor
  * between \(\bf 0.0\) and \(\bf 1.0\) responsible for smoothing out the
  * observations. This means
  * </p>
  *
  * <p>
- * \(\large S_2 = \alpha{O_1} + (1 - \alpha)S_1\)
+ * \(\large l_2 = \alpha{y_1} + (1 - \alpha)l_1\)
  * <br>
- * \(\large S_3 = \alpha{O_2} + (1 - \alpha)S_2\)
+ * \(\large l_3 = \alpha{y_2} + (1 - \alpha)l_2\)
  * <br>
- * \(\large S_4 = \alpha{O_3} + (1 - \alpha)S_3\)
+ * \(\large l_4 = \alpha{y_3} + (1 - \alpha)l_3\)
  * <br>
  * ... and so on.
  * </p>
  *
  * <p>
- * \(S_1\) can be chosen using one of many possible strategies, one of which
+ * \(l_1\) can be chosen using one of many possible strategies, one of which
  * must be provided at the time of initializing the model.
  * </p>
  *
  * <p>
- * This model, characterized by a dependence of \(S_i\) upon \(O_{i-1}\) was
+ * This model, characterized by a dependence of \(l_t\) upon \(y_{t-1}\) was
  * originally proposed in <i>1986</i> by <i>J. Stuart Hunter</i>.
  * </p>
  *
@@ -290,18 +290,18 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * </p>
    *
    * <ul>
-   * <li>For the general case, and when the predicted value \(S_i\) does
-   * not depend upon the observed value \(O_i\) directly (that is, it only
-   * depends upon observed values \(O_{i-1}\) or earlier), use
+   * <li>For the general case, and when the predicted value \(l_t\) does
+   * not depend upon the observed value \(y_t\) directly (that is, it only
+   * depends upon observed values \(y_{t-1}\) or earlier), use
    * {@link LeastSquaresOptimizer} as it finds the optimal \(\alpha\) more
    * accurately and much faster than any other method. When the predicted
-   * value \(S_i\) directly depends upon the observed value \(O_i\), the error,
-   * which is calculated as \(O_i - S_i\) is zero when \(S_i = O_i\). This
+   * value \(l_t\) directly depends upon the observed value \(y_t\), the error,
+   * which is calculated as \(y_t - l_t\) is zero when \(l_t = y_t\). This
    * tendency automatically pushes the optimizer towards \(\alpha = 1.0\),
-   * when \(S_i = O_i\). This is why, {@link LeastSquaresOptimizer} should not
-   * be used when \(S_i\) directly depends upon \(O_i\);</li>
-   * <li>When the predicted value \(S_i\) directly depends upon the observed
-   * value \(O_i\), use the {@link GradientDescentOptimizer}.</li>
+   * when \(l_t = y_t\). This is why, {@link LeastSquaresOptimizer} should not
+   * be used when \(l_t\) directly depends upon \(y_t\);</li>
+   * <li>When the predicted value \(l_t\) directly depends upon the observed
+   * value \(y_t\), use the {@link GradientDescentOptimizer}.</li>
    * </ul>
    */
   public abstract static class AlphaOptimizer
@@ -552,7 +552,7 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * <li>A function that can validate whether a specific value of
    * \(\alpha\) is within the bounds of the problem-space. For the
    * purposes of exponential smoothing, \(\alpha\) must be between
-   * {@literal 0.1} and {@literal 0.9}.</li>
+   * {@literal 0.0} and {@literal 1.0}.</li>
    * </ol>
    *
    * @see <a href="https://en.wikipedia.org/wiki/Levenberg-Marquardt_algorithm">Levenberg-Marquardt algorithm</a>
@@ -641,97 +641,97 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
 
     /**
      * <p>
-     * Gets the <i>Jacobian</i> (\(J\)) corresponding to the model function
+     * Gets the <i>Jacobian</i> (\(j\)) corresponding to the model function
      * used for optimizing the value of \(\alpha\). The <i>Jacobian</i> for a
-     * function \(S\) of \(k\) parameters \(x_k\) is a matrix, where an element
-     * \(J_{ik}\) of the matrix is given by
-     * \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), \(x_k\) are the
-     * \(k\) parameters on which the function \(S\) is dependent, and
-     * \(S_i\) are the values of the function \(S\) at \(i\) distinct points.
+     * function \(l\) of \(k\) parameters \(x_k\) is a matrix, where an element
+     * \(j_{tk}\) of the matrix is given by
+     * \(j_{tk} = \frac{\partial l_t}{\partial x_k}\), \(x_k\) are the
+     * \(k\) parameters on which the function \(l\) is dependent, and
+     * \(l_t\) are the values of the function \(l\) at \(t\) distinct points.
      * In the case of single exponential smoothing forecast models, there
      * is only one parameter \(\alpha\) that impacts the predicted value for
-     * a given observed value. Therefore, the <i>Jacobian</i> (\(J\)) depends
+     * a given observed value. Therefore, the <i>Jacobian</i> (\(j\)) depends
      * on only this one parameter \(\alpha\) and thereby reduces to
-     * \(\boxed{J_i = \frac{\partial S_i}{\partial \alpha}}\), or
+     * \(\boxed{j_t = \frac{\partial l_t}{\partial \alpha}}\), or
      * </p>
      *
      * <p>
-     * \(\large J = \begin{bmatrix}J_1 &amp; J_2 &amp; ... &amp; J_n \end{bmatrix}
-     * = \begin{bmatrix}\frac{\partial S_1}{\partial \alpha} &amp; \frac{\partial S_2}{\partial \alpha} &amp; ... &amp; \frac{\partial S_n}{\partial \alpha} \end{bmatrix}\)
+     * \(\large j = \begin{bmatrix}j_1 &amp; j_2 &amp; ... &amp; j_n \end{bmatrix}
+     * = \begin{bmatrix}\frac{\partial l_1}{\partial \alpha} &amp; \frac{\partial l_2}{\partial \alpha} &amp; ... &amp; \frac{\partial l_n}{\partial \alpha} \end{bmatrix}\)
      * </p>
      *
      * <p>
-     * For the single exponential smoothing model, the function \(S\) is
+     * For the single exponential smoothing model, the function \(l\) is
      * defined as (see above)
      * </p>
      *
      * <p>
      * <br>
-     * \(\large S_i = S_{i-1} + \alpha(B_i - S_{i-1})\)
+     * \(\large l_t = l_{t-1} + \alpha(z_t - l_{t-1})\)
      * <br>
      * </p>
      *
      * <p>
-     * where, \(B_i\) is a representation of the observation \(O_i\), referred
+     * where, \(z_t\) is a representation of the observation \(y_t\), referred
      * to here as the baseline version of that observation. Therefore,
      * </p>
      *
      * <p>
      * <br>
-     * \(\large J_i = \frac{\partial S_i}{\partial \alpha}\)
+     * \(\large j_t = \frac{\partial l_t}{\partial \alpha}\)
      * <br>
      * becomes
      * <br><br>
-     * \(\large J_i = \frac{\partial (S_{i-1} + \alpha(B_i - S_{i-1}))}{\partial \alpha}\),
+     * \(\large j_t = \frac{\partial}{\partial \alpha}[l_{t-1} + \alpha(z_t - l_{t-1})]\),
      * <br>
      * or (by the associative rule of differentiation)
      * <br><br>
-     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha(B_i - S_{i-1}))}{\partial \alpha}\),
+     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha} + \frac{\partial}{\partial \alpha}[\alpha(z_t - l_{t-1})]\),
      * <br>
      * or (by the associative rule of differentiation)
      * <br><br>
-     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial (\alpha{B_i})}{\partial \alpha} - \frac{\partial (\alpha{S_{i-1}})}{\partial \alpha}\),
+     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha} + \frac{\partial}{\partial \alpha}(\alpha{z_t}) - \frac{\partial}{\partial \alpha}(\alpha{l_{t-1}})\),
      * <br>
      * or (by the chain rule of differentiation)
      * <br><br>
-     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha}
-     * + \alpha{\frac{\partial B_i}{\partial \alpha}}
-     * + B_i{\frac{\partial \alpha}{\partial \alpha}}
-     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
-     * - S_{i-1}{\frac{\partial \alpha}{\partial \alpha}}\),
+     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha}
+     * + \alpha{\frac{\partial z_t}{\partial \alpha}}
+     * + z_t{\frac{\partial \alpha}{\partial \alpha}}
+     * - \alpha{\frac{\partial l_{t-1}}{\partial \alpha}}
+     * - l_{t-1}{\frac{\partial \alpha}{\partial \alpha}}\),
      * <br>
      * or (upon simplification)
      * <br><br>
-     * \(\large J_i = \frac{\partial S_{i-1}}{\partial \alpha}
-     * + B_i
-     * - \alpha{\frac{\partial S_{i-1}}{\partial \alpha}}
-     * - S_{i-1}\)
+     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha}
+     * + z_t
+     * - \alpha{\frac{\partial l_{t-1}}{\partial \alpha}}
+     * - l_{t-1}\)
      * <br>
-     * (since \(\frac{\partial B_i}{\partial \alpha} = 0\), given that
-     * \(B_i\), which is only dependent upon the observations does not
+     * (since \(\frac{\partial z_t}{\partial \alpha} = 0\), given that
+     * \(z_t\), which is only dependent upon the observations does not
      * depend on \(\alpha\)), or (upon rearrangement of terms)
      * <br><br>
-     * \(\large J_i = B_i - S_{i-1} + (1 - \alpha)\frac{\partial S_{i-1}}{\partial \alpha}\),
+     * \(\large j_t = z_t - l_{t-1} + (1 - \alpha)\frac{\partial l_{t-1}}{\partial \alpha}\),
      * <br>
-     * or, using the fact that \(\frac{\partial S_{i-1}}{\partial \alpha} = J_{i-1}\)
+     * or, using the fact that \(\frac{\partial l_{t-1}}{\partial \alpha} = j_{t-1}\)
      * <br><br>
-     * \(\large \boxed{J_i = B_i - S_{i-1} + (1 - \alpha)J_{i-1}}\)
+     * \(\large \boxed{j_t = z_t - l_{t-1} + (1 - \alpha)j_{t-1}}\)
      * </p>
      *
      * <p>
-     * Since \(S_1\) is not dependent upon \(\alpha\),
-     * \(J_1 = \frac{\partial S_1}{\partial \alpha} = 0\). This gives an
+     * Since \(z_1\) is not dependent upon \(\alpha\),
+     * \(j_1 = \frac{\partial l_1}{\partial \alpha} = 0\). This gives an
      * initial value for the Jacobian that can be used to derive the rest
      * using the recursive formula derived above.
      * </p>
      *
-     * @param observations      The observations (\(O_i\)) for which the
+     * @param observations      The observations (\(y_t\)) for which the
      *                          optimal value of \(\alpha\) is required.
-     * @param baselineFunction  A function that prepares a baseline \(B_i\)
-     *                          for each observation \(O_i\). The baseline
-     *                          in turn is used to generate predictions for
-     *                          the observations and also to optimize the
-     *                          value of \(\alpha\) through an iterative
+     * @param baselineFunction  A function that prepares a baseline for each
+     *                          observation \(y_t\). The baseline in turn is
+     *                          used to generate predictions for the
+     *                          observations and also to optimize the value
+     *                          of \(\alpha\) through an iterative
      *                          process that attempts to solve the
      *                          least-squares problem.
      * @param smoothingFunction A function to use for smoothing the

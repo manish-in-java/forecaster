@@ -33,36 +33,36 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large \boxed{S_i = \alpha{O_i} + (1 - \alpha)(S_{i-1} + T_{i-1})}\), and
+ * \(\large \boxed{l_t = \alpha{y_t} + (1 - \alpha)(l_{t-1} + b_{t-1})}\), and
  * <br>
- * \(\large \boxed{T_i = \beta(S_i - S_{i-1}) + (1 - \beta)T_{i-1}}\)
+ * \(\large \boxed{b_t = \beta(l_t - l_{t-1}) + (1 - \beta)b_{t-1}}\)
  * </p>
  *
  * <p>
- * where, \(\bf i\) is an index that ranges from {@literal 1} to the number of
- * observations in the sample, \(\bf O_i\) is the {@literal i-th} observation,
- * \(\bf S_i\) its smooth version, \(\bf \alpha\) and \(\bf \beta\) are
+ * where, \(\bf t\) is an index that ranges from {@literal 1} to the number of
+ * observations in the sample, \(\bf y_t\) is the {@literal t-th} observation,
+ * \(\bf l_t\) its smooth version, \(\bf \alpha\) and \(\bf \beta\) are
  * dampening factors between \(\bf 0.0\) and \(\bf 1.0\) responsible for
- * smoothing out the observations, and \(\bf T_i\) is an estimate of the upward
- * or downward trend for the {@literal i-th} observation. This means
+ * smoothing out the observations, and \(\bf b_t\) is an estimate of the upward
+ * or downward trend for the {@literal t-th} observation. This means
  * </p>
  *
  * <p>
- * \(\large S_2 = \alpha{O_2} + (1 - \alpha)(S_1 + T_1)\)
+ * \(\large l_2 = \alpha{y_2} + (1 - \alpha)(l_1 + b_1)\)
  * <br>
- * \(\large S_3 = \alpha{O_3} + (1 - \alpha)(S_2 + T_2)\)
+ * \(\large l_3 = \alpha{y_3} + (1 - \alpha)(l_2 + b_2)\)
  * <br>
- * \(\large S_4 = \alpha{O_4} + (1 - \alpha)(S_3 + T_2)\)
+ * \(\large l_4 = \alpha{y_4} + (1 - \alpha)(l_3 + b_2)\)
  * <br>
  * ... and so on, and
  * </p>
  *
  * <p>
- * \(\large T_2 = \beta(S_2 - S_1) + (1 - \beta)T_1\)
+ * \(\large b_2 = \beta(l_2 - l_1) + (1 - \beta)b_1\)
  * <br>
- * \(\large T_3 = \beta(S_3 - S_2) + (1 - \beta)T_2\)
+ * \(\large b_3 = \beta(l_3 - l_2) + (1 - \beta)b_2\)
  * <br>
- * \(\large T_4 = \beta(S_4 - S_3) + (1 - \beta)T_3\)
+ * \(\large b_4 = \beta(l_4 - l_3) + (1 - \beta)b_3\)
  * <br>
  * ... and so on.
  * </p>
@@ -73,12 +73,12 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large \boxed{S_1 = O_1}\), and
+ * \(\large \boxed{l_1 = y_1}\), and
  * <br>
- * \(\large \boxed{T_1 = \frac{O_n - O_1}{n - 1}}\),
+ * \(\large \boxed{b_1 = \frac{y_n - y_1}{n - 1}}\),
  * <br><br>
- * where, \(\bf n\) is the number of observations in the sample, \(\bf O_1\)
- * is the first (chronologically oldest) observation, and \(\bf O_n\) is the
+ * where, \(\bf n\) is the number of observations in the sample, \(\bf y_1\)
+ * is the first (chronologically oldest) observation, and \(\bf y_n\) is the
  * last (chronologically latest) observation.
  * </p>
  *
@@ -139,20 +139,20 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\large T_1 = \frac{O_n - O_1}{n - 1}\)
+   * \(\large b_1 = \frac{y_n - y_1}{n - 1}\)
    * <br>
    * </p>
    *
    * <p>
-   * where, \(n\) is the number of observations, \(O_1\) is the first
-   * (chronologically oldest) observation, and \(O_n\) is the last
+   * where, \(n\) is the number of observations, \(y_1\) is the first
+   * (chronologically oldest) observation, and \(y_n\) is the last
    * (chronologically latest) observation.
    * </p>
    *
    * @param observations The observations for which the trend is required.
    * @return An estimate for the overall trend for the specified observations.
    */
-  private double estimatedTrend(final double[] observations)
+  private double estimatedInitialTrend(final double[] observations)
   {
     return (observations[observations.length - 1] - observations[0]) / Math.max(1, observations.length - 1);
   }
@@ -208,7 +208,7 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * <li>A function that can validate whether a specific value of
    * \(\alpha\) or \(\beta\) is within the bounds of the problem-space. For
    * the purposes of exponential smoothing, \(\alpha\) and \(\beta\) must be
-   * between {@literal 0.1} and {@literal 0.9}.</li>
+   * between {@literal 0.0} and {@literal 1.0}.</li>
    * </ol>
    *
    * @param observations The observations to convert to a least-squares
@@ -246,47 +246,47 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
 
   /**
    * <p>
-   * Gets the <i>Jacobian</i> (\(J\)) corresponding to the model function used
+   * Gets the <i>Jacobian</i> (\(j\)) corresponding to the model function used
    * for optimizing the values of \(\alpha\) and \(\beta\). The <i>Jacobian</i>
-   * for a function \(S\) of \(k\) parameters \(x_k\) is a matrix, where an
-   * element \(J_{ik}\) of the matrix is given by
-   * \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), \(x_k\) are the
-   * \(k\) parameters on which the function \(S\) is dependent, and \(S_i\) are
-   * the values of the function \(S\) at \(i\) distinct points. In the case of
+   * for a function \(l\) of \(k\) parameters \(x_k\) is a matrix, where an
+   * element \(j_{tk}\) of the matrix is given by
+   * \(j_{tk} = \frac{\partial l_t}{\partial x_k}\), \(x_k\) are the
+   * \(k\) parameters on which the function \(l\) is dependent, and \(l_t\) are
+   * the values of the function \(l\) at \(t\) distinct points. In the case of
    * the double exponential smoothing forecast model, there are two parameters
    * - \(\alpha\) and \(beta\) that impact the predicted value for a given
-   * observed value. Therefore, (\(J\)) contains two values for every \(S_i\)
+   * observed value. Therefore, (\(j\)) contains two values for every \(l_t\)
    * </p>
    *
    * <p>
    * <br>
-   * \(\large J_{i\alpha}\), defined as \(\boxed{J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}}\), and
+   * \(\large j_{t\alpha}\), defined as \(\boxed{j_{t\alpha} = \frac{\partial l_t}{\partial \alpha}}\), and
    * <br>
-   * \(\large J_{i\beta}\), defined as \(\boxed{J_{i\beta} = \frac{\partial S_i}{\partial \beta}}\), or
+   * \(\large j_{t\beta}\), defined as \(\boxed{j_{t\beta} = \frac{\partial l_t}{\partial \beta}}\), or
    * <br>
    * </p>
    *
    * <p>
-   * \(\large J = \begin{bmatrix}
-   * J_{1\alpha} &amp; J_{2\alpha} &amp; ... &amp; J_{n\alpha}
+   * \(\large j = \begin{bmatrix}
+   * j_{1\alpha} &amp; j_{2\alpha} &amp; ... &amp; j_{n\alpha}
    * \\
-   * J_{1\beta} &amp; J_{2\beta} &amp; ... &amp; J_{n\beta}
+   * j_{1\beta} &amp; j_{2\beta} &amp; ... &amp; j_{n\beta}
    * \end{bmatrix}
    * = \begin{bmatrix}
-   * \frac{\partial S_1}{\partial \alpha} &amp; \frac{\partial S_2}{\partial \alpha} &amp; ... &amp; \frac{\partial S_n}{\partial \alpha}
+   * \frac{\partial l_1}{\partial \alpha} &amp; \frac{\partial l_2}{\partial \alpha} &amp; ... &amp; \frac{\partial l_n}{\partial \alpha}
    * \\
-   * \frac{\partial S_1}{\partial \beta} &amp; \frac{\partial S_2}{\partial \beta} &amp; ... &amp; \frac{\partial S_n}{\partial \beta}
+   * \frac{\partial l_1}{\partial \beta} &amp; \frac{\partial l_2}{\partial \beta} &amp; ... &amp; \frac{\partial l_n}{\partial \beta}
    * \end{bmatrix}\)
    * </p>
    *
    * <p>
-   * For the double exponential smoothing model, the function \(S\) is
+   * For the double exponential smoothing model, the function \(l\) is
    * defined as (see above)
    * </p>
    *
    * <p>
    * <br>
-   * \(\large S_i = \alpha{O_i} + (1 - \alpha)(S_{i-1} + T_{i-1})\)
+   * \(\large l_t = \alpha{y_t} + (1 - \alpha)(l_{t-1} + b_{t-1})\)
    * <br>
    * </p>
    *
@@ -296,19 +296,19 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\large J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}\)
+   * \(\large j_{t\alpha} = \frac{\partial l_t}{\partial \alpha}\)
    * <br>
    * becomes (through the rules for partial derivatives and the chain rule of
    * differentiation)
    * <br><br>
-   * \(\large J_{i\alpha} = \alpha{\frac{\partial O_i}{\partial \alpha}} + O_i{\frac{\partial \alpha}{\partial \alpha}}
+   * \(\large j_{t\alpha} = \alpha{\frac{\partial y_t}{\partial \alpha}} + y_t{\frac{\partial \alpha}{\partial \alpha}}
    * + (1 - \alpha)(\frac{\partial S{i-1}}{\partial \alpha} + \frac{\partial T{i-1}}{\partial \alpha})
-   * - (S_{i-1} + T_{i-1}){\frac{\partial \alpha}{\partial \alpha}}\),
+   * - (l_{t-1} + b_{t-1}){\frac{\partial \alpha}{\partial \alpha}}\),
    * <br>
-   * or (since \(\frac{\partial O_i}{\partial \alpha} = 0\), given that \(O_i\)
+   * or (since \(\frac{\partial y_t}{\partial \alpha} = 0\), given that \(y_t\)
    * does not depend on \(\alpha\))
    * <br><br>
-   * \(\large \boxed{J_{i\alpha} = O_i - S_{i-1} - T_{i-1} + (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial T_{i-1}}{\partial \alpha})}\)
+   * \(\large \boxed{j_{t\alpha} = y_t - l_{t-1} - b_{t-1} + (1 - \alpha)(\frac{\partial l_{t-1}}{\partial \alpha} + \frac{\partial b_{t-1}}{\partial \alpha})}\)
    * </p>
    *
    * <p>
@@ -317,53 +317,53 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\large J_{i\beta} = \frac{\partial S_i}{\partial \beta}\)
+   * \(\large j_{t\beta} = \frac{\partial l_t}{\partial \beta}\)
    * <br>
-   * becomes (since \(\frac{\partial O_i}{\partial \beta} = \frac{\partial \alpha}{\partial \beta} = 0\),
-   * given that \(O_i\) and \(\alpha\) do not depend on \(\beta\))
+   * becomes (since \(\frac{\partial y_t}{\partial \beta} = \frac{\partial \alpha}{\partial \beta} = 0\),
+   * given that \(y_t\) and \(\alpha\) do not depend on \(\beta\))
    * <br><br>
-   * \(\large \boxed{J_{i\beta} = (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \beta} + \frac{\partial T_{i-1}}{\partial \beta})}\)
+   * \(\large \boxed{j_{t\beta} = (1 - \alpha)(\frac{\partial l_{t-1}}{\partial \beta} + \frac{\partial b_{t-1}}{\partial \beta})}\)
    * </p>
    *
    * <p>
-   * Given that \(J_{i\alpha}\) and \(J_{i\beta}\) depend on
-   * \(\frac{\partial T_{i-1}}{\partial \alpha}\) and
-   * \(\frac{\partial T_{i-1}}{\partial \beta}\) as well
-   * </p>
-   *
-   * <p>
-   * <br>
-   * \(\large \boxed{\frac{\partial T_i}{\partial \alpha} = \beta(\frac{\partial S_i}{\partial \alpha} - \frac{\partial S_{i-1}}{\partial \alpha})
-   * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \alpha}}\), and
+   * Given that \(j_{t\alpha}\) and \(j_{t\beta}\) depend on
+   * \(\frac{\partial b_{t-1}}{\partial \alpha}\) and
+   * \(\frac{\partial b_{t-1}}{\partial \beta}\) as well
    * </p>
    *
    * <p>
    * <br>
-   * \(\large \frac{\partial T_i}{\partial \beta} = \beta(\frac{\partial S_i}{\partial \beta} - \frac{\partial S_{i-1}}{\partial \beta})
-   * + (S_i - S_{i-1})\frac{\partial \beta}{\partial \beta}
-   * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \beta} - T_{i-1}\frac{\partial \beta}{\partial \beta}\), or
+   * \(\large \boxed{\frac{\partial b_t}{\partial \alpha} = \beta(\frac{\partial l_t}{\partial \alpha} - \frac{\partial l_{t-1}}{\partial \alpha})
+   * + (1 - \beta)\frac{\partial b_{t-1}}{\partial \alpha}}\), and
+   * </p>
+   *
+   * <p>
    * <br>
-   * \(\large \boxed{\frac{\partial T_i}{\partial \beta} = S_i - S_{i-1} - T_{i-1}
-   * + \beta(\frac{\partial S_i}{\partial \beta} - \frac{\partial S_{i-1}}{\partial \beta})
-   * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \beta}
+   * \(\large \frac{\partial b_t}{\partial \beta} = \beta(\frac{\partial l_t}{\partial \beta} - \frac{\partial l_{t-1}}{\partial \beta})
+   * + (l_t - l_{t-1})\frac{\partial \beta}{\partial \beta}
+   * + (1 - \beta)\frac{\partial b_{t-1}}{\partial \beta} - b_{t-1}\frac{\partial \beta}{\partial \beta}\), or
+   * <br>
+   * \(\large \boxed{\frac{\partial b_t}{\partial \beta} = l_t - l_{t-1} - b_{t-1}
+   * + \beta(\frac{\partial l_t}{\partial \beta} - \frac{\partial l_{t-1}}{\partial \beta})
+   * + (1 - \beta)\frac{\partial b_{t-1}}{\partial \beta}
    * }\)
    * </p>
    *
    * <p>
-   * Due to the choice for \(S_1\) and \(T_1\), neither of which depends on
+   * Due to the choice for \(l_1\) and \(b_1\), neither of which depends on
    * \(\alpha\) or \(\beta\),
    * </p>
    *
    * <p>
    * <br>
-   * \(\large \boxed{\frac{\partial S_1}{\partial \alpha} =
-   * \frac{\partial S_1}{\partial \beta} =
-   * \frac{\partial T_1}{\partial \alpha} =
-   * \frac{\partial T_1}{\partial \beta} =
+   * \(\large \boxed{\frac{\partial l_1}{\partial \alpha} =
+   * \frac{\partial l_1}{\partial \beta} =
+   * \frac{\partial b_1}{\partial \alpha} =
+   * \frac{\partial b_1}{\partial \beta} =
    * 0}\)
    * </p>
    *
-   * @param observations The observations \(O_i\) for which optimal values of
+   * @param observations The observations \(y_t\) for which optimal values of
    *                     \(\alpha\) and \(\beta\) are required.
    * @return A {@link MultivariateMatrixFunction}, which is a two-column
    * matrix whose first column contains elements corresponding to the
@@ -480,7 +480,7 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
     smoothed[0] = observations[0];
 
     // Estimate the overall trend using the first and last observations.
-    trend[0] = estimatedTrend(observations);
+    trend[0] = estimatedInitialTrend(observations);
 
     // Generate the rest using the smoothing formula.
     for (int i = 1; i < samples; ++i)

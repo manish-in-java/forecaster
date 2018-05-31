@@ -20,13 +20,14 @@ import java.util.Arrays;
 
 /**
  * <p>
- * Generates forecast for a sample using exponential smoothing, where the
- * smooth version \(S\) of an observation \(O\) is obtained as
+ * Generates forecast for a sample using exponential smoothing, where an
+ * observation \(\bf y\) is dampened exponentially to get a smooth version
+ * \(\bf l\) as
  * </p>
  *
  * <p>
  * <br>
- * \(\boxed{S_i = \alpha{O_i} + (1 - \alpha)S_{i-1}}\)
+ * \(\large \boxed{l_t = \alpha{y_t} + (1 - \alpha)l_{t-1}}\)
  * <br>
  * </p>
  *
@@ -34,35 +35,35 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\boxed{S_i = S_{i-1} + \alpha({O_i} - S_{i-1})}\)
+ * \(\large \boxed{l_t = l_{t-1} + \alpha({y_t} - l_{t-1})}\)
  * <br>
  * </p>
  *
  * <p>
- * where, \(i\) is an index that ranges from {@literal 1} to the number of
- * observations in the sample, \(O_i\) is the {@literal i-th} observation,
- * \(S_i\) its smooth version, and \(\alpha\) is a dampening factor between
+ * where, \(t\) is an index that ranges from {@literal 1} to the number of
+ * observations in the sample, \(y_t\) is the {@literal t-th} observation,
+ * \(l_t\) its smooth version, and \(\alpha\) is a dampening factor between
  * \(0\) and \(1\) responsible for smoothing out the observations. This means
  * </p>
  *
  * <p>
- * \(S_2 = \alpha{O_2} + (1 - \alpha)S_1\)
+ * \(\large l_2 = \alpha{y_2} + (1 - \alpha)l_1\)
  * <br>
- * \(S_3 = \alpha{O_3} + (1 - \alpha)S_2\)
+ * \(\large l_3 = \alpha{y_3} + (1 - \alpha)l_2\)
  * <br>
- * \(S_4 = \alpha{O_4} + (1 - \alpha)S_3\)
+ * \(\large l_4 = \alpha{y_4} + (1 - \alpha)l_3\)
  * <br><br>
  * and so on.
  * </p>
  *
  * <p>
- * \(S_1\) can be chosen using one of many possible strategies, one of which
+ * \(l_1\) can be chosen using one of many possible strategies, one of which
  * must be provided at the time of initializing the model.
  * </p>
  *
  * <p>
  * This variation, also known by its short form <i>EWMA</i> is characterized
- * by a direct dependence of \(S_i\) upon \(O_i\), and was originally proposed
+ * by a direct dependence of \(l_t\) upon \(y_t\), and was originally proposed
  * in <i>1959</i> by <i>S.W. Roberts</i>.
  * </p>
  *

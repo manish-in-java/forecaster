@@ -28,48 +28,48 @@ import java.util.Arrays;
  * <p>
  * Generates forecast for a sample that shows seasonality (periodicity) in
  * addition to upward and/or downward trends, using triple exponential
- * smoothing, where an observation \(\bf O\) is dampened exponentially to
- * get a smooth version \(\bf S\) as
+ * smoothing, where an observation \(\bf y\) is dampened exponentially to
+ * get a smooth version \(\bf l\) as
  * </p>
  *
  * <p>
  * <br>
- * \(\large \boxed{S_i = \alpha(O_i - P_{i-m}) + (1 - \alpha)(S_{i-1} + T_{i-1})}\),
+ * \(\large \boxed{l_t = \alpha(y_t - s_{t-m}) + (1 - \alpha)(l_{t-1} + b_{t-1})}\),
  * <br>
- * \(\large \boxed{T_i = \beta(S_i - S_{i-1}) + (1 - \beta)T_{i-1}}\), and
+ * \(\large \boxed{b_t = \beta(l_t - l_{t-1}) + (1 - \beta)b_{t-1}}\), and
  * <br>
- * \(\large \boxed{P_i = \gamma(O_i - S_{i-1} - T_{i-1}) + (1 - \gamma)P_{i-m}}\)
+ * \(\large \boxed{s_t = \gamma(y_t - l_t) + (1 - \gamma)s_{t-m}}\)
  * </p>
  *
  * <p>
- * where, \(\bf i\) is an index that ranges from {@literal 1} to the number of
+ * where, \(\bf t\) is an index that ranges from {@literal 1} to the number of
  * observations in the sample, \(\bf m\) is the number of observations in a
- * single season, \(\bf O_i\) is the {@literal i-th} observation, \(\bf S_i\)
+ * single season, \(\bf y_t\) is the {@literal i-th} observation, \(\bf l_t\)
  * its smooth version, \(\bf \alpha\), \(\bf \beta\) and \(\bf \gamma\) are
  * dampening factors between \(\bf 0.0\) and \(\bf 1.0\) responsible for
- * smoothing out the observations, \(\bf T_i\) is an estimate of the upward
- * or downward trend for the {@literal i-th} observation, and \(\bf P_i\) an
+ * smoothing out the observations, \(\bf b_t\) is an estimate of the upward
+ * or downward trend for the {@literal t-th} observation, and \(\bf s_t\) an
  * estimate of seasonality, known as a seasonality index. This means
  * </p>
  *
  * <p>
  * <br>
- * \(\large S_{m+1} = \alpha(O_{m+1} - P_1) + (1 - \alpha)(S_m + T_m)\)
+ * \(\large l_{m+1} = \alpha(y_{m+1} - s_1) + (1 - \alpha)(l_m + b_m)\)
  * <br>
- * \(\large S_{m+2} = \alpha(O_{m+2} - P_2) + (1 - \alpha)(S_{m+1} + T_{m+1})\)
+ * \(\large l_{m+2} = \alpha(y_{m+2} - s_2) + (1 - \alpha)(l_{m+1} + b_{m+1})\)
  * <br>
- * \(\large S_{m+3} = \alpha(O_{m+3} - P_3) + (1 - \alpha)(S_{m+2} + T_{m+2})\)
+ * \(\large l_{m+3} = \alpha(y_{m+3} - s_3) + (1 - \alpha)(l_{m+2} + b_{m+2})\)
  * <br>
  * ... and so on, and
  * </p>
  *
  * <p>
  * <br>
- * \(\large T_{m+1} = \beta(S_{m+1} - S_m) + (1 - \beta)T_m\)
+ * \(\large b_{m+1} = \beta(l_{m+1} - l_m) + (1 - \beta)b_m\)
  * <br>
- * \(\large T_{m+2} = \beta(S_{m+2} - S_{m+1}) + (1 - \beta)T_{m+1}\)
+ * \(\large b_{m+2} = \beta(l_{m+2} - l_{m+1}) + (1 - \beta)b_{m+1}\)
  * <br>
- * \(\large T_{m+3} = \beta(S_{m+3} - S_{m+2}) + (1 - \beta)T_{m+2}\)
+ * \(\large b_{m+3} = \beta(l_{m+3} - l_{m+2}) + (1 - \beta)b_{m+2}\)
  * <br>
  * ... and so on.
  * </p>
@@ -77,7 +77,7 @@ import java.util.Arrays;
  * <p>
  * This version is known as <i>additive triple exponential smoothing</i> due to
  * the fact that the effect of seasonality is <i>added</i> to the observed
- * value (\(S_{m+1} = \alpha(O_{m+1} - P_1) + ...\)) when smoothing the
+ * value (\(l_{m+1} = \alpha(y_{m+1} - s_1) + ...\)) when smoothing the
  * observations.
  * </p>
  *
@@ -92,37 +92,37 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * Given that \(S_i\) depends on \(P_{i-m}\), the smooth values cannot be
- * calculated for observations up to \(O_m\) (since \(i-m\) is negative and the
- * corresponding \(P_{i-m}\) are unavailable). Therefore, the smooth values
- * \(S_1\) to \(S_m\) are chosen upfront as
+ * Given that \(l_t\) depends on \(s_{t-m}\), the smooth values cannot be
+ * calculated for observations up to \(y_m\) (since \(i-m\) is negative and the
+ * corresponding \(s_{t-m}\) are unavailable). Therefore, the smooth values
+ * \(l_1\) to \(l_m\) are chosen upfront as
  * </p>
  *
  * <p>
  * <br>
- * \(\large S_1 = O_1\)
+ * \(\large l_1 = y_1\)
  * <br>
- * \(\large S_2 = O_2\)
+ * \(\large l_2 = y_2\)
  * <br>
  * ...
  * <br>
- * \(\large S_m = O_m\)
+ * \(\large l_m = y_m\)
  * </p>
  *
  * <p>
- * The initial estimate for the trend, \(T_1\) is calculated as
+ * The initial estimate for the trend, \(b_1\) is calculated as
  * </p>
  *
  * <p>
  * <br>
- * \(\large \boxed{T_1 = \frac{1}{m^2}[(O_{m+1} - O_1) + (O_{m+2} - O_2) + ... + (O_{2m} - O_m)]}\)
+ * \(\large \boxed{b_1 = \frac{1}{m^2}[(y_{m+1} - y_1) + (y_{m+2} - y_2) + ... + (y_{2m} - y_m)]}\)
  * </p>
  *
  * <p>
- * Given the dependence of the seasonality index \(P_i\) on \(P_{i-m}\), the
- * first \(m\) indices \(P_1\) to \(P_m\) also need to be estimated. For the
- * model to produce an optimum forecast, this requires a slightly involved
- * procedure, as explained below.
+ * Given the dependence of the seasonality index \(s_t\) on \(s_{t-m}\), the
+ * first \(m\) seasonality indices \(s_1\) to \(s_m\) also need to be
+ * estimated. For the model to produce an optimum forecast, this requires
+ * a slightly involved procedure, as explained below.
  * </p>
  *
  * <p>
@@ -138,29 +138,29 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large A_1 = \frac{1}{m}(O_1 + O_2 + ... + O_m)\)
+ * \(\large A_1 = \frac{1}{m}(y_1 + y_2 + ... + y_m)\)
  * <br>
- * \(\large A_2 = \frac{1}{m}(O_{m+1} + O_{m+2} + ... + O_{2m})\)
- * <br>
- * ...
- * <br>
- * \(\large A_n = \frac{1}{m}(O_{(n-1)m+1} + O_{(n-1)m+2} + ... + O_{nm})\)
- * </p>
- *
- * <p>
- * <b>Step 3:</b> Calculate the first \(m\) seasonality indices \(P_1\) to
- * \(P_m\) as
- * </p>
- *
- * <p>
- * <br>
- * \(\large P_1 = \frac{1}{n}(\frac{O_1}{A_1} + \frac{O_{m+1}}{A_2} + ... + \frac{O_{(n-1)m+1}}{A_n})\)
- * <br>
- * \(\large P_2 = \frac{1}{n}(\frac{O_2}{A_1} + \frac{O_{m+2}}{A_2} + ... + \frac{O_{(n-1)m+2}}{A_n})\)
+ * \(\large A_2 = \frac{1}{m}(y_{m+1} + y_{m+2} + ... + y_{2m})\)
  * <br>
  * ...
  * <br>
- * \(\large P_m = \frac{1}{n}(\frac{O_m}{A_1} + \frac{O_{2m}}{A_2} + ... + \frac{O_{nm}}{A_n})\)
+ * \(\large A_n = \frac{1}{m}(y_{(n-1)m+1} + y_{(n-1)m+2} + ... + y_{nm})\)
+ * </p>
+ *
+ * <p>
+ * <b>Step 3:</b> Calculate the first \(m\) seasonality indices \(s_1\) to
+ * \(s_m\) as
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large s_1 = \frac{1}{n}(\frac{y_1}{A_1} + \frac{y_{m+1}}{A_2} + ... + \frac{y_{(n-1)m+1}}{A_n})\)
+ * <br>
+ * \(\large s_2 = \frac{1}{n}(\frac{y_2}{A_1} + \frac{y_{m+2}}{A_2} + ... + \frac{y_{(n-1)m+2}}{A_n})\)
+ * <br>
+ * ...
+ * <br>
+ * \(\large s_m = \frac{1}{n}(\frac{y_m}{A_1} + \frac{y_{2m}}{A_2} + ... + \frac{y_{nm}}{A_n})\)
  * </p>
  *
  * <p>
@@ -260,13 +260,13 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\large T_1 = \frac{1}{m^2}[(O_{m+1} - O_1) + (O_{m+2} - O_2) + ... + (O_{2m} - O_m)]\)
+   * \(\large b_1 = \frac{1}{m^2}[(y_{m+1} - y_1) + (y_{m+2} - y_2) + ... + (y_{2m} - y_m)]\)
    * <br>
    * </p>
    *
    * <p>
    * where, \(m\) is the number of observations in a single season and
-   * \(O_1\) is the first (chronologically oldest) observation.
+   * \(y_1\) is the first (chronologically oldest) observation.
    * </p>
    *
    * @param observations The observations for which the trend is required.
@@ -285,13 +285,13 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
   }
 
   /**
-   * Gets optimal values for the dampening factors \(\alpha\) and \(\beta\)
-   * for a set of observations.
+   * Gets optimal values for the dampening factors \(\alpha\), \(\beta\) and
+   * \(\gamma\) for a set of observations.
    *
-   * @param observations The observations for which \(\alpha\) and \(\beta\)
-   *                     are required.
-   * @return Best-effort optimal values for \(\alpha\) and \(\beta\), given the
-   * observations.
+   * @param observations The observations for which \(\alpha\), \(\beta\) and
+   *                     \(\gamma\) are required.
+   * @return Best-effort optimal values for \(\alpha\), \(\beta\) and
+   * \(\gamma\), given the observations.
    */
   private double[] optimalDampeningFactors(final double[] observations)
   {
@@ -335,8 +335,8 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * <li>A function that can validate whether a specific value of
    * \(\alpha\), \(\beta\) or \(\gamma\) is within the bounds of the
    * problem-space. For the purposes of exponential smoothing, \(\alpha\),
-   * \(\beta\) and \(\gamma\) must be between {@literal 0.1} and
-   * {@literal 0.9}.</li>
+   * \(\beta\) and \(\gamma\) must be between {@literal 0.0} and
+   * {@literal 1.0}.</li>
    * </ol>
    *
    * @param observations The observations to convert to a least-squares
@@ -374,54 +374,54 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
 
   /**
    * <p>
-   * Gets the <i>Jacobian</i> (\(J\)) corresponding to the model function used
+   * Gets the <i>Jacobian</i> (\(j\)) corresponding to the model function used
    * for optimizing the values of \(\alpha\), \(\beta\) and \(\gamma\). The
-   * <i>Jacobian</i> for a function \(S\) of \(k\) parameters \(x_k\) is a
-   * matrix, where an element \(J_{ik}\) of the matrix is given by
-   * \(J_{ik} = \frac{\partial S_i}{\partial x_k}\), \(x_k\) are the
-   * \(k\) parameters on which the function \(S\) is dependent, and \(S_i\) are
-   * the values of the function \(S\) at \(i\) distinct points. In the case of
+   * <i>Jacobian</i> for a function \(l\) of \(k\) parameters \(x_k\) is a
+   * matrix, where an element \(j_{tk}\) of the matrix is given by
+   * \(j_{tk} = \frac{\partial l_t}{\partial x_k}\), \(x_k\) are the
+   * \(k\) parameters on which the function \(l\) is dependent, and \(l_t\) are
+   * the values of the function \(l\) at \(i\) distinct points. In the case of
    * the triple exponential smoothing forecast model, there are three
    * parameters - \(\alpha\), \(\beta\) and \(\gamma\) that impact the predicted
-   * value for a given observed value. Therefore, (\(J\)) contains three values
-   * for every \(S_i\)
+   * value for a given observed value. Therefore, (\(j\)) contains three values
+   * for every \(l_t\)
    * </p>
    *
    * <p>
    * <br>
-   * \(\large J_{i\alpha}\), defined as \(\boxed{J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}}\),
+   * \(\large j_{t\alpha}\), defined as \(\boxed{j_{t\alpha} = \frac{\partial l_t}{\partial \alpha}}\),
    * <br>
-   * \(\large J_{i\beta}\), defined as \(\boxed{J_{i\beta} = \frac{\partial S_i}{\partial \beta}}\), and
+   * \(\large j_{t\beta}\), defined as \(\boxed{j_{t\beta} = \frac{\partial l_t}{\partial \beta}}\), and
    * <br>
-   * \(\large J_{i\gamma}\), defined as \(\boxed{J_{i\gamma} = \frac{\partial S_i}{\partial \gamma}}\), or
+   * \(\large j_{t\gamma}\), defined as \(\boxed{j_{t\gamma} = \frac{\partial l_t}{\partial \gamma}}\), or
    * <br>
    * </p>
    *
    * <p>
    * \(\large J = \begin{bmatrix}
-   * J_{1\alpha} &amp; J_{2\alpha} &amp; ... &amp; J_{n\alpha}
+   * j_{1\alpha} &amp; j_{2\alpha} &amp; ... &amp; j_{n\alpha}
    * \\
-   * J_{1\beta} &amp; J_{2\beta} &amp; ... &amp; J_{n\beta}
+   * j_{1\beta} &amp; j_{2\beta} &amp; ... &amp; j_{n\beta}
    * \\
-   * J_{1\gamma} &amp; J_{2\gamma} &amp; ... &amp; J_{n\gamma}
+   * j_{1\gamma} &amp; j_{2\gamma} &amp; ... &amp; j_{n\gamma}
    * \end{bmatrix}
    * = \begin{bmatrix}
-   * \frac{\partial S_1}{\partial \alpha} &amp; \frac{\partial S_2}{\partial \alpha} &amp; ... &amp; \frac{\partial S_n}{\partial \alpha}
+   * \frac{\partial l_1}{\partial \alpha} &amp; \frac{\partial l_2}{\partial \alpha} &amp; ... &amp; \frac{\partial l_n}{\partial \alpha}
    * \\
-   * \frac{\partial S_1}{\partial \beta} &amp; \frac{\partial S_2}{\partial \beta} &amp; ... &amp; \frac{\partial S_n}{\partial \beta}
+   * \frac{\partial l_1}{\partial \beta} &amp; \frac{\partial l_2}{\partial \beta} &amp; ... &amp; \frac{\partial l_n}{\partial \beta}
    * \\
-   * \frac{\partial S_1}{\partial \gamma} &amp; \frac{\partial S_2}{\partial \gamma} &amp; ... &amp; \frac{\partial S_n}{\partial \gamma}
+   * \frac{\partial l_1}{\partial \gamma} &amp; \frac{\partial l_2}{\partial \gamma} &amp; ... &amp; \frac{\partial l_n}{\partial \gamma}
    * \end{bmatrix}\)
    * </p>
    *
    * <p>
-   * For the triple exponential smoothing model, the function \(S\) is
+   * For the triple exponential smoothing model, the function \(l\) is
    * defined as (see above)
    * </p>
    *
    * <p>
    * <br>
-   * \(\large S_i = \alpha(O_i - P_{i-m}) + (1 - \alpha)(S_{i-1} + T_{i-1})\),
+   * \(\large l_t = \alpha(y_t - s_{t-m}) + (1 - \alpha)(l_{t-1} + b_{t-1})\),
    * <br>
    * </p>
    *
@@ -431,31 +431,31 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\large J_{i\alpha} = \frac{\partial S_i}{\partial \alpha}\)
+   * \(\large j_{t\alpha} = \frac{\partial l_t}{\partial \alpha}\)
    * <br> becomes
    * <br><br>
-   * \(\large J_{i\alpha} = \frac{\partial}{\partial \alpha}[\alpha{(O_i - P_{i-m})} + (1 - \alpha)(S_{i-1} + T_{i-1})]\),
+   * \(\large j_{t\alpha} = \frac{\partial}{\partial \alpha}[\alpha{(y_t - s_{t-m})} + (1 - \alpha)(l_{t-1} + b_{t-1})]\),
    * <br> or (by the associative rule of differentiation)
    * <br><br>
-   * \(\large J_{i\alpha} = \frac{\partial}{\partial \alpha}(\alpha{O_i})
-   * - \frac{\partial}{\partial \alpha}(\alpha{P_{i-m}})
-   * + \frac{\partial}{\partial \alpha}[(1 - \alpha)(S_{i-1} + T_{i-1})]\),
+   * \(\large j_{t\alpha} = \frac{\partial}{\partial \alpha}(\alpha{y_t})
+   * - \frac{\partial}{\partial \alpha}(\alpha{s_{t-m}})
+   * + \frac{\partial}{\partial \alpha}[(1 - \alpha)(l_{t-1} + b_{t-1})]\),
    * <br> or (by the chain rule of differentiation)
    * <br><br>
-   * \(\large J_{i\alpha} = \alpha\frac{\partial O_i}{\partial \alpha} + O_i\frac{\partial \alpha}{\partial \alpha}
-   * - \alpha\frac{\partial P_{i-m}}{\partial \alpha} - P_{i-m}\frac{\partial \alpha}{\partial \alpha}
-   * + (1 - \alpha)\frac{\partial}{\partial \alpha}(S_{i-1} + T_{i-1}) + (S_{i-1} + T_{i-1})\frac{\partial}{\partial \alpha}(1 - \alpha)\),
-   * <br> or (since \(\frac{\partial O_i}{\partial \alpha} = 0\), given that
-   * \(O_i\) does not depend on \(\alpha\))
+   * \(\large j_{t\alpha} = \alpha\frac{\partial y_t}{\partial \alpha} + y_t\frac{\partial \alpha}{\partial \alpha}
+   * - \alpha\frac{\partial s_{t-m}}{\partial \alpha} - s_{t-m}\frac{\partial \alpha}{\partial \alpha}
+   * + (1 - \alpha)\frac{\partial}{\partial \alpha}(l_{t-1} + b_{t-1}) + (l_{t-1} + b_{t-1})\frac{\partial}{\partial \alpha}(1 - \alpha)\),
+   * <br> or (since \(\frac{\partial y_t}{\partial \alpha} = 0\), given that
+   * \(y_t\) does not depend on \(\alpha\))
    * <br><br>
-   * \(\large J_{i\alpha} = O_i
-   * - \alpha\frac{\partial P_{i-m}}{\partial \alpha} - P_{i-m}
-   * + (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial T_{i-1}}{\partial \alpha}) - (S_{i-1} + T_{i-1})\)
+   * \(\large j_{t\alpha} = y_t
+   * - \alpha\frac{\partial s_{t-m}}{\partial \alpha} - s_{t-m}
+   * + (1 - \alpha)(\frac{\partial l_{t-1}}{\partial \alpha} + \frac{\partial b_{t-1}}{\partial \alpha}) - (l_{t-1} + b_{t-1})\)
    * <br> or (upon rearrangement of terms)
    * <br><br>
-   * \(\large \boxed{J_{i\alpha} = O_i - S_{i-1} - T_{i-1} - P_{i-m}
-   * - \alpha\frac{\partial P_{i-m}}{\partial \alpha}
-   * + (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial T_{i-1}}{\partial \alpha})}\)
+   * \(\large \boxed{j_{t\alpha} = y_t - l_{t-1} - b_{t-1} - s_{t-m}
+   * - \alpha\frac{\partial s_{t-m}}{\partial \alpha}
+   * + (1 - \alpha)(\frac{\partial l_{t-1}}{\partial \alpha} + \frac{\partial b_{t-1}}{\partial \alpha})}\)
    * </p>
    *
    * <p>
@@ -464,18 +464,18 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\large J_{i\beta} = \frac{\partial S_i}{\partial \beta}\)
+   * \(\large j_{t\beta} = \frac{\partial l_t}{\partial \beta}\)
    * <br>
    * becomes
    * <br><br>
-   * \(\large J_{i\beta} = \frac{\partial}{\partial \beta}[\alpha(O_i - P_{i-m}) + (1 - \alpha)(S_{i-1} + T_{i-1})]\),
+   * \(\large j_{t\beta} = \frac{\partial}{\partial \beta}[\alpha(y_t - s_{t-m}) + (1 - \alpha)(l_{t-1} + b_{t-1})]\),
    * <br> or (by the associative rule of differentiation)
    * <br><br>
-   * \(\large J_{i\beta} = \alpha\frac{\partial}{\partial \beta}(O_i - P_{i-m}) + (1 - \alpha)\frac{\partial}{\partial \beta}(S_{i-1} + T_{i-1})]\),
+   * \(\large j_{t\beta} = \alpha\frac{\partial}{\partial \beta}(y_t - s_{t-m}) + (1 - \alpha)\frac{\partial}{\partial \beta}(l_{t-1} + b_{t-1})]\),
    * <br> or (by the associative rule of differentiation)
    * <br><br>
-   * \(\large \boxed{J_{i\beta} = (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \beta} + \frac{\partial T_{i-1}}{\partial \beta})
-   * - \alpha\frac{\partial P_{i-m}}{\partial \beta}}\).
+   * \(\large \boxed{j_{t\beta} = (1 - \alpha)(\frac{\partial l_{t-1}}{\partial \beta} + \frac{\partial b_{t-1}}{\partial \beta})
+   * - \alpha\frac{\partial s_{t-m}}{\partial \beta}}\).
    * </p>
    *
    * <p>
@@ -484,73 +484,73 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *
    * <p>
    * <br>
-   * \(\large J_{i\gamma} = \frac{\partial S_i}{\partial \gamma}\)
+   * \(\large j_{t\gamma} = \frac{\partial l_t}{\partial \gamma}\)
    * <br>
    * becomes
    * <br><br>
-   * \(\large \boxed{J_{i\gamma} = (1 - \alpha)(\frac{\partial S_{i-1}}{\partial \gamma} + \frac{\partial T_{i-1}}{\partial \gamma})
-   * - \alpha\frac{\partial P_{i-m}}{\partial \gamma}}\).
+   * \(\large \boxed{j_{t\gamma} = (1 - \alpha)(\frac{\partial l_{t-1}}{\partial \gamma} + \frac{\partial b_{t-1}}{\partial \gamma})
+   * - \alpha\frac{\partial s_{t-m}}{\partial \gamma}}\).
    * </p>
    *
    * <p>
-   * Given that \(J_{i\alpha}\), \(J_{i\beta}\) and \(J_{i\gamma}\) depend on
-   * \(\frac{\partial T_i}{\partial \alpha}\),
-   * \(\frac{\partial T_i}{\partial \beta}\),
-   * \(\frac{\partial T_i}{\partial \gamma}\),
-   * \(\frac{\partial P_i}{\partial \alpha}\),
-   * \(\frac{\partial P_i}{\partial \beta}\), and
-   * \(\frac{\partial P_i}{\partial \gamma}\), these need to be
+   * Given that \(j_{t\alpha}\), \(j_{t\beta}\) and \(j_{t\gamma}\) depend on
+   * \(\frac{\partial b_t}{\partial \alpha}\),
+   * \(\frac{\partial b_t}{\partial \beta}\),
+   * \(\frac{\partial b_t}{\partial \gamma}\),
+   * \(\frac{\partial s_t}{\partial \alpha}\),
+   * \(\frac{\partial s_t}{\partial \beta}\), and
+   * \(\frac{\partial s_t}{\partial \gamma}\), these need to be
    * computed as well.
    * </p>
    *
    * <p>
    * <br>
-   * \(\large \boxed{\frac{\partial T_i}{\partial \alpha} = \beta(\frac{\partial S_i}{\partial \alpha}
-   * - \frac{\partial S_{i-1}}{\partial \alpha})
-   * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \alpha}}\),
+   * \(\large \boxed{\frac{\partial b_t}{\partial \alpha} = \beta(\frac{\partial l_t}{\partial \alpha}
+   * - \frac{\partial l_{t-1}}{\partial \alpha})
+   * + (1 - \beta)\frac{\partial b_{t-1}}{\partial \alpha}}\),
    * <br>
-   * \(\large \boxed{\frac{\partial T_i}{\partial \beta} = S_i - S_{i-1} - T_{i-1}
-   * + \beta(\frac{\partial S_i}{\partial \beta} - \frac{\partial S_{i-1}}{\partial \beta})
-   * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \beta}}\),
+   * \(\large \boxed{\frac{\partial b_t}{\partial \beta} = l_t - l_{t-1} - b_{t-1}
+   * + \beta(\frac{\partial l_t}{\partial \beta} - \frac{\partial l_{t-1}}{\partial \beta})
+   * + (1 - \beta)\frac{\partial b_{t-1}}{\partial \beta}}\),
    * <br>
-   * \(\large \boxed{\frac{\partial T_i}{\partial \gamma} = \beta(\frac{\partial S_i}{\partial \gamma}
-   * - \frac{\partial S_{i-1}}{\partial \gamma})
-   * + (1 - \beta)\frac{\partial T_{i-1}}{\partial \gamma}}\),
+   * \(\large \boxed{\frac{\partial b_t}{\partial \gamma} = \beta(\frac{\partial l_t}{\partial \gamma}
+   * - \frac{\partial l_{t-1}}{\partial \gamma})
+   * + (1 - \beta)\frac{\partial b_{t-1}}{\partial \gamma}}\),
    * <br><br>
-   * \(\large \boxed{\frac{\partial P_i}{\partial \alpha} = (1 - \gamma)\frac{\partial P_{i-m}}{\partial \alpha}
-   * - \gamma(\frac{\partial S_{i-1}}{\partial \alpha} + \frac{\partial T_{i-1}}{\partial \alpha})}\),
+   * \(\large \boxed{\frac{\partial s_t}{\partial \alpha} = (1 - \gamma)\frac{\partial s_{t-m}}{\partial \alpha}
+   * - \gamma\frac{\partial l_t}{\partial \alpha}}\),
    * <br>
-   * \(\large \boxed{\frac{\partial P_i}{\partial \beta} = (1 - \gamma)\frac{\partial P_{i-m}}{\partial \beta}
-   * - \gamma(\frac{\partial S_{i-1}}{\partial \beta} + \frac{\partial T_{i-1}}{\partial \beta})}\),
+   * \(\large \boxed{\frac{\partial s_t}{\partial \beta} = (1 - \gamma)\frac{\partial s_{t-m}}{\partial \beta}
+   * - \gamma\frac{\partial l_t}{\partial \beta}}\),
    * <br>
-   * \(\large \boxed{\frac{\partial P_i}{\partial \gamma} = O_i - S_{i-1} - T_{i-1} - P_{i-m}
-   * - \gamma(\frac{\partial S_{i-1}}{\partial \gamma} + \frac{\partial T_{i-1}}{\partial \gamma})
-   * + (1 - \gamma)\frac{\partial P_{i-m}}{\partial \gamma}}\).
+   * \(\large \boxed{\frac{\partial s_t}{\partial \gamma} = y_t - l_t - s_{t-m}
+   * - \gamma\frac{\partial l_t}{\partial \gamma}
+   * + (1 - \gamma)\frac{\partial s_{t-m}}{\partial \gamma}}\).
    * </p>
    *
    * <p>
-   * Given that the smooth observations \(S_1\) to \(S_m\) have no dependence
+   * Given that the smooth observations \(l_1\) to \(l_m\) have no dependence
    * on \(\alpha\), \(\beta\) or \(\gamma\),
-   * \(\boxed{\frac{\partial S_1}{\partial \alpha} = \frac{\partial S_1}{\partial \beta} = \frac{\partial S_1}{\partial \gamma}
-   * = \frac{\partial S_2}{\partial \alpha} = \frac{\partial S_2}{\partial \beta} = \frac{\partial S_2}{\partial \gamma}
+   * \(\boxed{\frac{\partial l_1}{\partial \alpha} = \frac{\partial l_1}{\partial \beta} = \frac{\partial l_1}{\partial \gamma}
+   * = \frac{\partial l_2}{\partial \alpha} = \frac{\partial l_2}{\partial \beta} = \frac{\partial l_2}{\partial \gamma}
    * = ...
-   * = \frac{\partial S_m}{\partial \alpha} = \frac{\partial S_m}{\partial \beta} = \frac{\partial S_m}{\partial \gamma}
+   * = \frac{\partial l_m}{\partial \alpha} = \frac{\partial l_m}{\partial \beta} = \frac{\partial l_m}{\partial \gamma}
    * = 0}\).
    * </p>
    *
    * <p>
-   * Similarly, since the initial estimate for the trend, \(T_1\) has no
+   * Similarly, since the initial estimate for the trend, \(b_1\) has no
    * dependence on \(\alpha\), \(\beta\) or \(\gamma\),
-   * \(\boxed{\frac{\partial T_1}{\partial \alpha} = \frac{\partial T_1}{\partial \beta} = \frac{\partial T_1}{\partial \gamma} = 0}\).
+   * \(\boxed{\frac{\partial b_1}{\partial \alpha} = \frac{\partial b_1}{\partial \beta} = \frac{\partial b_1}{\partial \gamma} = 0}\).
    * </p>
    *
    * <p>
-   * In the same way, since the initial seasonality indices \(P_1\) to \(P_m\)
+   * In the same way, since the initial seasonality indices \(s_1\) to \(s_m\)
    * have no dependence on \(\alpha\), \(\beta\) or \(\gamma\),
-   * \(\boxed{\frac{\partial P_1}{\partial \alpha} = \frac{\partial P_1}{\partial \beta} = \frac{\partial P_1}{\partial \gamma}
-   * = \frac{\partial P_2}{\partial \alpha} = \frac{\partial P_2}{\partial \beta} = \frac{\partial P_2}{\partial \gamma}
+   * \(\boxed{\frac{\partial s_1}{\partial \alpha} = \frac{\partial s_1}{\partial \beta} = \frac{\partial s_1}{\partial \gamma}
+   * = \frac{\partial s_2}{\partial \alpha} = \frac{\partial s_2}{\partial \beta} = \frac{\partial s_2}{\partial \gamma}
    * = ...
-   * = \frac{\partial P_m}{\partial \alpha} = \frac{\partial P_m}{\partial \beta} = \frac{\partial P_m}{\partial \gamma}
+   * = \frac{\partial s_m}{\partial \alpha} = \frac{\partial s_m}{\partial \beta} = \frac{\partial s_m}{\partial \gamma}
    * = 0}\).
    * </p>
    *
@@ -559,7 +559,7 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * to determine the remaining values for the Jacobian.
    * </p>
    *
-   * @param observations The observations \(O_i\) for which optimal values of
+   * @param observations The observations \(y_t\) for which optimal values of
    *                     \(\alpha\), \(\beta\) and \(\gamma\) are required.
    * @return A {@link MultivariateMatrixFunction}, which is a three-column
    * matrix whose first column contains elements corresponding to the
