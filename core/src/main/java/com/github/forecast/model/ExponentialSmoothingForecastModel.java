@@ -32,9 +32,9 @@ abstract class ExponentialSmoothingForecastModel extends ForecastModel
                                                                                                                  DAMPENING_FACTOR_CONVERGENCE_THRESHOLD);
   static final double                      INITIAL_DAMPENING_FACTOR               = 0.5;
   static final LevenbergMarquardtOptimizer LEAST_SQUARES_OPTIMIZER                = new LevenbergMarquardtOptimizer();
-  static final double                      MAX_DAMPENING_FACTOR                   = 0.8;
+  static final double                      MAX_DAMPENING_FACTOR                   = 1.0;
   static final int                         MAX_OPTIMIZATION_EVALUATIONS           = 100;
   static final int                         MAX_OPTIMIZATION_ITERATIONS            = 100;
-  static final double                      MIN_DAMPENING_FACTOR                   = 0.2;
+  static final double                      MIN_DAMPENING_FACTOR                   = 0.0;
   static final GoalType                    OPTIMIZATION_GOAL                      = GoalType.MINIMIZE;
 }
