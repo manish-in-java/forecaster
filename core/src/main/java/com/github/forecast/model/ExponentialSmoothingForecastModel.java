@@ -16,6 +16,7 @@ package com.github.forecast.model;
 
 import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
 import org.apache.commons.math3.optim.SimpleVectorValueChecker;
+import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 
 /**
  * Generates a forecast for a sample using a weighted average algorithm
@@ -35,4 +36,5 @@ abstract class ExponentialSmoothingForecastModel extends ForecastModel
   static final int                         MAX_OPTIMIZATION_EVALUATIONS           = 100;
   static final int                         MAX_OPTIMIZATION_ITERATIONS            = 100;
   static final double                      MIN_DAMPENING_FACTOR                   = 0.2;
+  static final GoalType                    OPTIMIZATION_GOAL                      = GoalType.MINIMIZE;
 }
