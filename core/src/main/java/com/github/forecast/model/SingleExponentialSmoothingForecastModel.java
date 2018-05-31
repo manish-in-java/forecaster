@@ -15,17 +15,10 @@
 package com.github.forecast.model;
 
 import com.github.forecast.domain.Forecast;
-import org.apache.commons.math3.analysis.MultivariateMatrixFunction;
-import org.apache.commons.math3.analysis.MultivariateVectorFunction;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresBuilder;
-import org.apache.commons.math3.fitting.leastsquares.LeastSquaresProblem;
-import org.apache.commons.math3.fitting.leastsquares.ParameterValidator;
-import org.apache.commons.math3.linear.ArrayRealVector;
 import org.apache.commons.math3.optim.InitialGuess;
 import org.apache.commons.math3.optim.MaxEval;
 import org.apache.commons.math3.optim.MaxIter;
 import org.apache.commons.math3.optim.SimpleValueChecker;
-import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunction;
 import org.apache.commons.math3.optim.nonlinear.scalar.ObjectiveFunctionGradient;
 import org.apache.commons.math3.optim.nonlinear.scalar.gradient.NonLinearConjugateGradientOptimizer;
@@ -106,33 +99,18 @@ import java.util.function.Function;
  */
 public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothingForecastModel
 {
-  private final AlphaOptimizer          alphaOptimizer;
+  private final NonLinearConjugateGradientOptimizer OPTIMIZER = new NonLinearConjugateGradientOptimizer(NonLinearConjugateGradientOptimizer.Formula.FLETCHER_REEVES
+      , new SimpleValueChecker(DAMPENING_FACTOR_CONVERGENCE_THRESHOLD, DAMPENING_FACTOR_CONVERGENCE_THRESHOLD));
+
   private final FirstPredictionProvider firstPredictionProvider;
 
   /**
    * Creates a model with simple average strategy for generating the first
-   * prediction and a {@literal non-linear least-squares} optimizer for
-   * finding the optimal value for the dampening factor \(\alpha\).
+   * prediction.
    */
   public SingleExponentialSmoothingForecastModel()
   {
-    this(LeastSquaresOptimizer.INSTANCE);
-  }
-
-  /**
-   * Creates a model with simple average strategy for generating the first
-   * prediction and a specified strategy for finding the optimal value for
-   * the dampening factor \(\alpha\).
-   *
-   * @param alphaOptimizer The strategy to use for optimizing \(\alpha\) such
-   *                       that the forecast is as close to the sample as
-   *                       possible.
-   * @throws NullPointerException if {@code alphaOptimizer} is {@literal null}.
-   * @see AlphaOptimizer
-   */
-  SingleExponentialSmoothingForecastModel(final AlphaOptimizer alphaOptimizer)
-  {
-    this(SimpleAverageFirstPredictionProvider.INSTANCE, alphaOptimizer);
+    this(SimpleAverageFirstPredictionProvider.INSTANCE);
   }
 
   /**
@@ -148,23 +126,13 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    *                                prediction, which, even though slightly
    *                                time-consuming, is likely to produce a
    *                                more accurate forecast.
-   * @param alphaOptimizer          The strategy to use for optimizing
-   *                                \(\alpha\) such that the forecast is as
-   *                                close to the sample as possible.
-   * @throws NullPointerException if {@code firstPredictionProvider} or
-   *                              {@code alphaOptimizer} is {@literal null}.
-   * @see AlphaOptimizer
+   * @throws NullPointerException if {@code firstPredictionProvider} is
+   *                              {@literal null}.
    * @see FirstPredictionProvider
    */
-  SingleExponentialSmoothingForecastModel(final FirstPredictionProvider firstPredictionProvider, final AlphaOptimizer alphaOptimizer)
+  SingleExponentialSmoothingForecastModel(final FirstPredictionProvider firstPredictionProvider)
   {
     super();
-
-    // Ensure that the alpha optimization strategy is specified.
-    if (alphaOptimizer == null)
-    {
-      throw new NullPointerException("The strategy for optimizing alpha must be specified.");
-    }
 
     // Ensure that the first prediction generation strategy is specified.
     if (firstPredictionProvider == null)
@@ -172,7 +140,6 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
       throw new NullPointerException("The strategy for generating the first prediction must be specified.");
     }
 
-    this.alphaOptimizer = alphaOptimizer;
     this.firstPredictionProvider = firstPredictionProvider;
   }
 
@@ -235,9 +202,9 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * @return A best-effort optimal value for \(\alpha\), given the
    * observations.
    */
-  double optimalAlpha(final double[] observations)
+  final double optimalAlpha(final double[] observations)
   {
-    return alphaOptimizer.optimize(observations, this::baselineObservations, this::smoothenObservations);
+    return optimize(observations, this::baselineObservations, this::smoothenObservations);
   }
 
   /**
@@ -284,494 +251,126 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
   }
 
   /**
-   * <p>
-   * Determines how the dampening factor \(\alpha\) is optimized such that
-   * the resultant forecast is as close to the sample as possible.
-   * </p>
+   * Finds the optimal value for the dampening factor \(\alpha\) for a
+   * collection of observations, such that the value can be used to
+   * generate a forecast that is as close to the sample as possible.
    *
-   * <ul>
-   * <li>For the general case, and when the predicted value \(l_t\) does
-   * not depend upon the observed value \(y_t\) directly (that is, it only
-   * depends upon observed values \(y_{t-1}\) or earlier), use
-   * {@link LeastSquaresOptimizer} as it finds the optimal \(\alpha\) more
-   * accurately and much faster than any other method. When the predicted
-   * value \(l_t\) directly depends upon the observed value \(y_t\), the error,
-   * which is calculated as \(y_t - l_t\) is zero when \(l_t = y_t\). This
-   * tendency automatically pushes the optimizer towards \(\alpha = 1.0\),
-   * when \(l_t = y_t\). This is why, {@link LeastSquaresOptimizer} should not
-   * be used when \(l_t\) directly depends upon \(y_t\);</li>
-   * <li>When the predicted value \(l_t\) directly depends upon the observed
-   * value \(y_t\), use the {@link GradientDescentOptimizer}.</li>
-   * </ul>
+   * @param observations      The observations for which the optimal value of
+   *                          \(\alpha\) is required.
+   * @param baselineFunction  A function that prepares a baseline for the
+   *                          observations. The baseline in turn is used to
+   *                          generate predictions for the observations and
+   *                          also to optimize the value of \(\alpha\).
+   * @param smoothingFunction A smoothing function to use for finding smooth
+   *                          versions of the observations during the
+   *                          optimization process.
+   * @return An optimal value for \(\alpha\) for the given observations.
    */
-  public abstract static class AlphaOptimizer
+  private double optimize(final double[] observations
+      , final Function<double[], double[]> baselineFunction
+      , final BiFunction<double[], Double, double[]> smoothingFunction)
   {
-    /**
-     * Gets a validator that ensures that the value of \(\alpha\) as determined
-     * by the optimization algorithm remains within its expected bounds during
-     * all iterations.
-     *
-     * @return A {@link ParameterValidator}.
-     */
-    protected final ParameterValidator alphaValidator()
-    {
-      return points -> {
-        final double alpha = points.getEntry(0);
-
-        return alpha < MIN_DAMPENING_FACTOR
-               // If alpha is below the lower threshold, reset it to the
-               // lower threshold.
-               ? new ArrayRealVector(new double[] { MIN_DAMPENING_FACTOR })
-               : alpha > MAX_DAMPENING_FACTOR
-                 // If alpha is above the upper threshold, reset it to the
-                 // upper threshold.
-                 ? new ArrayRealVector(new double[] { MAX_DAMPENING_FACTOR })
-                 // If alpha is within its bounds, return its value.
-                 : points;
-      };
-    }
-
-    /**
-     * Finds the optimal value for the dampening factor \(\alpha\) for a
-     * collection of observations, such that the value can be used to
-     * generate a forecast that is as close to the sample as possible.
-     *
-     * @param observations      The observations for which the optimal value of
-     *                          \(\alpha\) is required.
-     * @param baselineFunction  A function that prepares a baseline for the
-     *                          observations. The baseline in turn is used to
-     *                          generate predictions for the observations and
-     *                          also to optimize the value of \(\alpha\).
-     * @param smoothingFunction A smoothing function to use for finding smooth
-     *                          versions of the observations during the
-     *                          optimization process.
-     * @return An optimal value for \(\alpha\) for the given observations.
-     */
-    protected abstract double optimize(final double[] observations
-        , final Function<double[], double[]> baselineFunction
-        , final BiFunction<double[], Double, double[]> smoothingFunction);
+    return OPTIMIZER.optimize(optimizationModelFunction(observations, baselineFunction, smoothingFunction)
+        , optimizationFunctionGradient(observations, baselineFunction, smoothingFunction)
+        , OPTIMIZATION_GOAL
+        , new InitialGuess(new double[] { INITIAL_DAMPENING_FACTOR })
+        , new MaxEval(MAX_OPTIMIZATION_EVALUATIONS)
+        , new MaxIter(MAX_OPTIMIZATION_ITERATIONS))
+                    .getPoint()[0];
   }
 
   /**
-   * <p>
-   * Optimizes the value for the dampening factor \(\alpha\) for a set of
-   * observations using the {@literal Non-linear Conjugate Gradient Descent}
-   * method, which is a non-linear steepest-descent optimization algorithm.
-   * This method generates predictions for the given observations, starting
-   * with an initial guess for the exponent \(\alpha\), and iteratively
-   * changing the dampening factor value until one is found where the gradient
-   * of the curve generated by the predicted values becomes {@literal zero}.
-   * </p>
+   * Gets the model function to use for finding the gradient for a
+   * given value of alpha.
    *
-   * <p>
-   * The optimization algorithm requires the following input:
-   * </p>
-   *
-   * <ol>
-   * <li>The observations for which \(\alpha\) needs to be optimized;</li>
-   * <li>An initial guess for \(\alpha\);</li>
-   * <li>A function that can take the observations and some value for
-   * \(\alpha\), and produce predictions for each of the observations.
-   * This is known as the model function for the algorithm. The algorithm
-   * internally calculates the MSE for each value of \(\alpha\) by using
-   * the given observations and their corresponding predictions for the
-   * specified value of \(\alpha\);</li>
-   * <li>A function that can take the observations and some value for
-   * \(\alpha\), and produce a <i>gradient</i> for each prediction
-   * made by the model function. The gradient determines whether the
-   * value of \(\alpha\) is too high or too low, and therefore whether
-   * it needs to be lowered or raised.</li>
-   * </ol>
-   *
-   * @see <a href="https://en.wikipedia.org/wiki/Nonlinear_conjugate_gradient_method">Non-linear conjugate gradient descent</a>
+   * @param observations      The observations for which the optimal value of
+   *                          \(\alpha\) is required.
+   * @param baselineFunction  A function that prepares a baseline for
+   *                          the observations. The baseline in turn is
+   *                          used to generate predictions for the
+   *                          observations and also to optimize the
+   *                          value of \(\alpha\) through an iterative
+   *                          process.
+   * @param smoothingFunction A function to use for smoothing the
+   *                          observations during the optimization
+   *                          process.
+   * @return An {@link ObjectiveFunctionGradient}.
    */
-  public final static class GradientDescentOptimizer extends AlphaOptimizer
+  private ObjectiveFunctionGradient optimizationFunctionGradient(final double[] observations
+      , final Function<double[], double[]> baselineFunction
+      , final BiFunction<double[], Double, double[]> smoothingFunction)
   {
-    public static final AlphaOptimizer INSTANCE = new GradientDescentOptimizer();
+    return new ObjectiveFunctionGradient(params ->
+                                         {
+                                           final double alpha = params[0];
 
-    private final SimpleValueChecker                  ALPHA_CONVERGENCE_CHECKER = new SimpleValueChecker(DAMPENING_FACTOR_CONVERGENCE_THRESHOLD,
-                                                                                                         DAMPENING_FACTOR_CONVERGENCE_THRESHOLD);
-    private final NonLinearConjugateGradientOptimizer ALPHA_OPTIMIZER           = new NonLinearConjugateGradientOptimizer(
-        NonLinearConjugateGradientOptimizer.Formula.FLETCHER_REEVES, ALPHA_CONVERGENCE_CHECKER);
-    private final int                                 MAX_ITERATIONS            = 10000;
+                                           // Prepare a baseline for the observations.
+                                           final double[] baseline = baselineFunction.apply(observations);
 
-    /**
-     * Deliberately hidden to prevent instantiation.
-     */
-    private GradientDescentOptimizer()
-    {
-    }
+                                           // Smoothen the baselined observations.
+                                           final double[] smoothed = smoothingFunction.apply(baseline, alpha);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected double optimize(final double[] observations
-        , final Function<double[]
-        , double[]> baselineFunction
-        , final BiFunction<double[], Double, double[]> smoothingFunction)
-    {
-      return ALPHA_OPTIMIZER.optimize(optimizationModelFunction(observations, baselineFunction, smoothingFunction)
-          , optimizationFunctionGradient(observations, baselineFunction, smoothingFunction)
-          , GoalType.MINIMIZE
-          , new InitialGuess(new double[] { INITIAL_DAMPENING_FACTOR })
-          , new MaxEval(MAX_ITERATIONS)
-          , new MaxIter(MAX_ITERATIONS))
-                            .getPoint()[0];
-    }
+                                           double previousPrediction = smoothed[0];
+                                           double previousSlope = 0.0;
+                                           double gradient = 0.0;
 
-    /**
-     * Gets the model function to use for finding the gradient for a
-     * given value of alpha.
-     *
-     * @param observations      The observations for which the optimal value of
-     *                          \(\alpha\) is required.
-     * @param baselineFunction  A function that prepares a baseline for
-     *                          the observations. The baseline in turn is
-     *                          used to generate predictions for the
-     *                          observations and also to optimize the
-     *                          value of \(\alpha\) through an iterative
-     *                          process.
-     * @param smoothingFunction A function to use for smoothing the
-     *                          observations during the optimization
-     *                          process.
-     * @return An {@link ObjectiveFunctionGradient}.
-     */
-    private ObjectiveFunctionGradient optimizationFunctionGradient(final double[] observations
-        , final Function<double[], double[]> baselineFunction
-        , final BiFunction<double[], Double, double[]> smoothingFunction)
-    {
-      return new ObjectiveFunctionGradient(params ->
+                                           // Calculate the gradient.
+                                           for (int i = 0; i < baseline.length - 1; ++i)
                                            {
-                                             final double alpha = params[0];
+                                             final double error = baseline[i + 1] - smoothed[i];
 
-                                             // Prepare a baseline for the observations.
-                                             final double[] baseline = baselineFunction.apply(observations);
+                                             final double slope = baseline[i] - previousPrediction + (1 - alpha) * previousSlope;
 
-                                             // Smoothen the baselined observations.
-                                             final double[] smoothed = smoothingFunction.apply(baseline, alpha);
+                                             gradient += error * slope;
+                                             previousSlope = slope;
+                                             previousPrediction = smoothed[i];
+                                           }
 
-                                             double previousPrediction = smoothed[0];
-                                             double previousSlope = 0.0;
-                                             double gradient = 0.0;
-
-                                             // Calculate the gradient.
-                                             for (int i = 0; i < baseline.length - 1; ++i)
-                                             {
-                                               final double error = baseline[i + 1] - smoothed[i];
-
-                                               final double slope = baseline[i] - previousPrediction + (1 - alpha) * previousSlope;
-
-                                               gradient += error * slope;
-                                               previousSlope = slope;
-                                               previousPrediction = smoothed[i];
-                                             }
-
-                                             return new double[] { 2 * gradient };
-                                           });
-    }
-
-    /**
-     * Gets the model function to use for optimizing the value of
-     * \(\alpha\), which calculates the MSE for a given collection of
-     * observations and a specified value of alpha\(\alpha\).
-     *
-     * @param observations      The observations for which the optimal value of
-     *                          \(\alpha\) is required.
-     * @param baselineFunction  A function that prepares a baseline for
-     *                          the observations. The baseline in turn is
-     *                          used to generate predictions for the
-     *                          observations and also to optimize the
-     *                          value of \(\alpha\) through an iterative
-     *                          process.
-     * @param smoothingFunction A function to use for smoothing the
-     *                          observations during the optimization
-     *                          process.
-     * @return An {@link ObjectiveFunction}.
-     */
-    private ObjectiveFunction optimizationModelFunction(final double[] observations
-        , final Function<double[], double[]> baselineFunction
-        , final BiFunction<double[], Double, double[]> smoothingFunction)
-    {
-      return new ObjectiveFunction(params -> {
-        final double alpha = params[0];
-
-        // Prepare a baseline for the observations.
-        final double[] baseline = baselineFunction.apply(observations);
-
-        // Smoothen the baselined observations.
-        final double[] smoothed = smoothingFunction.apply(baseline, alpha);
-
-        double sse = 0.0;
-        for (int i = 0; i < baseline.length - 1; ++i)
-        {
-          final double error = baseline[i + 1] - smoothed[i];
-
-          sse += error * error;
-        }
-
-        return sse;
-      });
-    }
+                                           return new double[] { 2 * gradient };
+                                         });
   }
 
   /**
-   * <p>
-   * Optimizes the value for the dampening factor \(\alpha\) for a set of
-   * observations using the {@literal Levenberg-Marquardt (LM)} method,
-   * which is a non-linear least-squares curve-fitting algorithm. This
-   * method generates predictions for the given observations, starting
-   * with an initial guess for the dampening factor \(\alpha\), and iteratively
-   * changing the dampening factor value until one is found that minimizes the
-   * {@literal sum-squared-error (MSE)} for the observations.
-   * </p>
+   * Gets the model function to use for optimizing the value of
+   * \(\alpha\), which calculates the MSE for a given collection of
+   * observations and a specified value of alpha\(\alpha\).
    *
-   * <p>
-   * The optimization algorithm requires the following input:
-   * </p>
-   *
-   * <ol>
-   * <li>The observations for which \(\alpha\) needs to be optimized;</li>
-   * <li>An initial guess for \(\alpha\);</li>
-   * <li>A function that can take the observations and some value for
-   * \(\alpha\), and produce predictions for each of the observations.
-   * This is known as the model function for the algorithm. The algorithm
-   * internally calculates the MSE for each value of \(\alpha\) by using
-   * the given observations and their corresponding predictions for the
-   * specified value of \(\alpha\);</li>
-   * <li>A function that can take the observations and some value for
-   * \(\alpha\), and produce a <i>Jacobian</i> for each prediction
-   * made by the model function. The <i>Jacobian</i> is a linear
-   * approximation of the derivative of a predicted value with respect
-   * to the variable parameter \(\alpha\) and hence serves to determine
-   * whether the trend at each predicted value matches that of the
-   * corresponding observed value. This information is critical in optimizing
-   * the value of \(\alpha\) as the derivative determines whether the
-   * value of \(\alpha\) is too high or too low, and therefore whether
-   * it needs to be lowered or raised;</li>
-   * <li>A function that can validate whether a specific value of
-   * \(\alpha\) is within the bounds of the problem-space. For the
-   * purposes of exponential smoothing, \(\alpha\) must be between
-   * {@literal 0.0} and {@literal 1.0}.</li>
-   * </ol>
-   *
-   * @see <a href="https://en.wikipedia.org/wiki/Levenberg-Marquardt_algorithm">Levenberg-Marquardt algorithm</a>
-   * @see <a href="https://en.wikipedia.org/wiki/Least_squares">Least squares</a>
-   * @see <a href="https://en.wikipedia.org/wiki/Curve_fitting">Curve fitting</a>
+   * @param observations      The observations for which the optimal value of
+   *                          \(\alpha\) is required.
+   * @param baselineFunction  A function that prepares a baseline for
+   *                          the observations. The baseline in turn is
+   *                          used to generate predictions for the
+   *                          observations and also to optimize the
+   *                          value of \(\alpha\) through an iterative
+   *                          process.
+   * @param smoothingFunction A function to use for smoothing the
+   *                          observations during the optimization
+   *                          process.
+   * @return An {@link ObjectiveFunction}.
    */
-  public final static class LeastSquaresOptimizer extends AlphaOptimizer
+  private ObjectiveFunction optimizationModelFunction(final double[] observations
+      , final Function<double[], double[]> baselineFunction
+      , final BiFunction<double[], Double, double[]> smoothingFunction)
   {
-    public static final AlphaOptimizer INSTANCE = new LeastSquaresOptimizer();
+    return new ObjectiveFunction(params -> {
+      final double alpha = params[0];
 
-    /**
-     * Deliberately hidden to prevent instantiation.
-     */
-    private LeastSquaresOptimizer()
-    {
-    }
+      // Prepare a baseline for the observations.
+      final double[] baseline = baselineFunction.apply(observations);
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected double optimize(final double[] observations
-        , final Function<double[], double[]> baselineFunction
-        , final BiFunction<double[], Double, double[]> smoothingFunction)
-    {
-      return LEAST_SQUARES_OPTIMIZER.optimize(optimizationModel(observations, baselineFunction, smoothingFunction))
-                                    .getPoint()
-                                    .getEntry(0);
-    }
+      // Smoothen the baselined observations.
+      final double[] smoothed = smoothingFunction.apply(baseline, alpha);
 
-    /**
-     * Converts a collection of observations into a
-     * {@literal least-squares curve-fitting problem} using an initial
-     * value of the dampening factor \(\alpha\). The dampening factor is used for
-     * exponential smoothing so that the resultant problem can be fed
-     * to a curve-fitting algorithm for finding the optimal value of
-     * \(\alpha\).
-     *
-     * @param observations      The observations to convert to a least-squares
-     *                          curve-fitting problem.
-     * @param baselineFunction  A function that prepares a baseline for
-     *                          the observations. The baseline in turn is
-     *                          used to generate predictions for the
-     *                          observations and also to optimize the
-     *                          value of \(\alpha\) through an iterative
-     *                          process that attempts to solve the
-     *                          least-squares problem.
-     * @param smoothingFunction A function to use for smoothing the
-     *                          observations during the optimization
-     *                          process.
-     * @return A {@link LeastSquaresProblem}.
-     */
-    private LeastSquaresProblem optimizationModel(final double[] observations
-        , final Function<double[], double[]> baselineFunction
-        , final BiFunction<double[], Double, double[]> smoothingFunction)
-    {
-      return new LeastSquaresBuilder()
-          .checkerPair(DAMPENING_FACTOR_CONVERGENCE_CHECKER)
-          .maxEvaluations(MAX_OPTIMIZATION_EVALUATIONS)
-          .maxIterations(MAX_OPTIMIZATION_ITERATIONS)
-          .model(optimizationModelFunction(observations, smoothingFunction), optimizationModelJacobian(observations, baselineFunction, smoothingFunction))
-          .parameterValidator(alphaValidator())
-          .target(observations)
-          .start(new double[] { INITIAL_DAMPENING_FACTOR })
-          .build();
-    }
+      double sse = 0.0;
+      for (int i = 0; i < baseline.length - 1; ++i)
+      {
+        final double error = baseline[i + 1] - smoothed[i];
 
-    /**
-     * Gets the model function to use for optimizing the value of \(\alpha\),
-     * which is just the predicted value for each observed value. The
-     * optimization algorithm then uses the difference between the observed
-     * and corresponding predicted values to find the optimal value for
-     * \(\alpha\).
-     *
-     * @param observations      The observations for which the optimal value of
-     *                          \(\alpha\) is required.
-     * @param smoothingFunction A function to use for smoothing the
-     *                          observations during the optimization
-     *                          process.
-     * @return A {@link MultivariateVectorFunction}.
-     */
-    private MultivariateVectorFunction optimizationModelFunction(final double[] observations, final BiFunction<double[], Double, double[]> smoothingFunction)
-    {
-      return params -> smoothingFunction.apply(observations, params[0]);
-    }
+        sse += error * error;
+      }
 
-    /**
-     * <p>
-     * Gets the <i>Jacobian</i> (\(j\)) corresponding to the model function
-     * used for optimizing the value of \(\alpha\). The <i>Jacobian</i> for a
-     * function \(l\) of \(k\) parameters \(x_k\) is a matrix, where an element
-     * \(j_{tk}\) of the matrix is given by
-     * \(j_{tk} = \frac{\partial l_t}{\partial x_k}\), \(x_k\) are the
-     * \(k\) parameters on which the function \(l\) is dependent, and
-     * \(l_t\) are the values of the function \(l\) at \(t\) distinct points.
-     * In the case of single exponential smoothing forecast models, there
-     * is only one parameter \(\alpha\) that impacts the predicted value for
-     * a given observed value. Therefore, the <i>Jacobian</i> (\(j\)) depends
-     * on only this one parameter \(\alpha\) and thereby reduces to
-     * \(\boxed{j_t = \frac{\partial l_t}{\partial \alpha}}\), or
-     * </p>
-     *
-     * <p>
-     * \(\large j = \begin{bmatrix}j_1 &amp; j_2 &amp; ... &amp; j_n \end{bmatrix}
-     * = \begin{bmatrix}\frac{\partial l_1}{\partial \alpha} &amp; \frac{\partial l_2}{\partial \alpha} &amp; ... &amp; \frac{\partial l_n}{\partial \alpha} \end{bmatrix}\)
-     * </p>
-     *
-     * <p>
-     * For the single exponential smoothing model, the function \(l\) is
-     * defined as (see above)
-     * </p>
-     *
-     * <p>
-     * <br>
-     * \(\large l_t = l_{t-1} + \alpha(z_t - l_{t-1})\)
-     * <br>
-     * </p>
-     *
-     * <p>
-     * where, \(z_t\) is a representation of the observation \(y_t\), referred
-     * to here as the baseline version of that observation. Therefore,
-     * </p>
-     *
-     * <p>
-     * <br>
-     * \(\large j_t = \frac{\partial l_t}{\partial \alpha}\)
-     * <br>
-     * becomes
-     * <br><br>
-     * \(\large j_t = \frac{\partial}{\partial \alpha}[l_{t-1} + \alpha(z_t - l_{t-1})]\),
-     * <br>
-     * or (by the associative rule of differentiation)
-     * <br><br>
-     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha} + \frac{\partial}{\partial \alpha}[\alpha(z_t - l_{t-1})]\),
-     * <br>
-     * or (by the associative rule of differentiation)
-     * <br><br>
-     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha} + \frac{\partial}{\partial \alpha}(\alpha{z_t}) - \frac{\partial}{\partial \alpha}(\alpha{l_{t-1}})\),
-     * <br>
-     * or (by the chain rule of differentiation)
-     * <br><br>
-     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha}
-     * + \alpha{\frac{\partial z_t}{\partial \alpha}}
-     * + z_t{\frac{\partial \alpha}{\partial \alpha}}
-     * - \alpha{\frac{\partial l_{t-1}}{\partial \alpha}}
-     * - l_{t-1}{\frac{\partial \alpha}{\partial \alpha}}\),
-     * <br>
-     * or (upon simplification)
-     * <br><br>
-     * \(\large j_t = \frac{\partial l_{t-1}}{\partial \alpha}
-     * + z_t
-     * - \alpha{\frac{\partial l_{t-1}}{\partial \alpha}}
-     * - l_{t-1}\)
-     * <br>
-     * (since \(\frac{\partial z_t}{\partial \alpha} = 0\), given that
-     * \(z_t\), which is only dependent upon the observations does not
-     * depend on \(\alpha\)), or (upon rearrangement of terms)
-     * <br><br>
-     * \(\large j_t = z_t - l_{t-1} + (1 - \alpha)\frac{\partial l_{t-1}}{\partial \alpha}\),
-     * <br>
-     * or, using the fact that \(\frac{\partial l_{t-1}}{\partial \alpha} = j_{t-1}\)
-     * <br><br>
-     * \(\large \boxed{j_t = z_t - l_{t-1} + (1 - \alpha)j_{t-1}}\)
-     * </p>
-     *
-     * <p>
-     * Since \(z_1\) is not dependent upon \(\alpha\),
-     * \(j_1 = \frac{\partial l_1}{\partial \alpha} = 0\). This gives an
-     * initial value for the Jacobian that can be used to derive the rest
-     * using the recursive formula derived above.
-     * </p>
-     *
-     * @param observations      The observations (\(y_t\)) for which the
-     *                          optimal value of \(\alpha\) is required.
-     * @param baselineFunction  A function that prepares a baseline for each
-     *                          observation \(y_t\). The baseline in turn is
-     *                          used to generate predictions for the
-     *                          observations and also to optimize the value
-     *                          of \(\alpha\) through an iterative
-     *                          process that attempts to solve the
-     *                          least-squares problem.
-     * @param smoothingFunction A function to use for smoothing the
-     *                          observations during the optimization
-     *                          process.
-     * @return A {@link MultivariateMatrixFunction}, which is a
-     * single-column matrix whose elements correspond to the
-     * <i>Jacobian</i> of the model function.
-     * @see <a href="https://en.wikipedia.org/wiki/Jacobian_matrix_and_determinant">Jacobian matrix</a>
-     */
-    private MultivariateMatrixFunction optimizationModelJacobian(final double[] observations
-        , final Function<double[], double[]> baselineFunction
-        , final BiFunction<double[], Double, double[]> smoothingFunction)
-    {
-      return params -> {
-        final double alpha = params[0];
-
-        // Smoothen the observations.
-        final double[] smoothed = smoothingFunction.apply(observations, alpha);
-
-        final double[][] jacobian = new double[observations.length][1];
-
-        // Prepare a baseline for the observations.
-        final double[] baseline = baselineFunction.apply(observations);
-
-        // The first element of the Jacobian is simply the first observation,
-        // since there is no prior prediction for it.
-        jacobian[0][0] = observations[0];
-
-        // Calculate the rest of the Jacobian using the current observation
-        // and the immediately previous prediction.
-        for (int i = 1; i < jacobian.length; ++i)
-        {
-          jacobian[i][0] = baseline[i] - smoothed[i - 1]
-              + Math.min(1, i - 1) * Math.pow(1 - alpha, i - 1) * jacobian[i - 1][0];
-        }
-
-        return jacobian;
-      };
-    }
+      return sse;
+    });
   }
 
   /**

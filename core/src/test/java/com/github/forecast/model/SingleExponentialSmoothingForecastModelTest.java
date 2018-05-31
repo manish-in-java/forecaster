@@ -14,7 +14,6 @@
 
 package com.github.forecast.model;
 
-import com.github.forecast.model.SingleExponentialSmoothingForecastModel.GradientDescentOptimizer;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -41,17 +40,7 @@ public class SingleExponentialSmoothingForecastModelTest extends ExponentialSmoo
   @Test
   public void testForecastWithAlternateFirstPredictionGenerator()
   {
-    testForecast(new SingleExponentialSmoothingForecastModel(SingleExponentialSmoothingForecastModel.SimpleFirstPredictionProvider.INSTANCE, GradientDescentOptimizer.INSTANCE));
-  }
-
-  /**
-   * Tests that a forecast model cannot be constructed without specifying
-   * the strategy for optimizing the value of the dampening factor.
-   */
-  @Test(expected = NullPointerException.class)
-  public void testForecastWithoutAlphaOptimizer()
-  {
-    testForecast(new SingleExponentialSmoothingForecastModel(SingleExponentialSmoothingForecastModel.SimpleFirstPredictionProvider.INSTANCE, null));
+    testForecast(new SingleExponentialSmoothingForecastModel(SingleExponentialSmoothingForecastModel.SimpleFirstPredictionProvider.INSTANCE));
   }
 
   /**
@@ -61,7 +50,7 @@ public class SingleExponentialSmoothingForecastModelTest extends ExponentialSmoo
   @Test(expected = NullPointerException.class)
   public void testForecastWithoutFirstPredictionGenerator()
   {
-    testForecast(new SingleExponentialSmoothingForecastModel(null, GradientDescentOptimizer.INSTANCE));
+    testForecast(new SingleExponentialSmoothingForecastModel(null));
   }
 
   /**
