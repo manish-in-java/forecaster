@@ -23,6 +23,13 @@ import com.github.forecast.domain.Forecast;
  * </p>
  *
  * <p>
+ * For example, given the sample {@literal [11, 9, 13, 12, 11, 10]}, the
+ * forecast will be {@literal [11, 11, 11, 11, 11, 11, 11]}, since
+ * {@literal 11} is the simple average of all the observed values taken
+ * together.
+ * </p>
+ *
+ * <p>
  * This model uses the same value for all predictions (since the average of
  * any set of values is always unique). Therefore, it is not very useful
  * from a practical standpoint and should be used only for demonstration
