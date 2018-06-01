@@ -41,11 +41,11 @@ import java.util.Arrays;
  *
  * <p>
  * where, \(\bf t\) is an index that ranges from {@literal 1} to the number of
- * observations in the sample, \(\bf y_t\) is the {@literal t-th} observation,
- * \(\bf l_t\) its level estimate, \(\bf \alpha\) and \(\bf \beta\) are
- * dampening factors between \(\bf 0.0\) and \(\bf 1.0\) responsible for
- * smoothing out the observations, and \(\bf b_t\) is an estimate of the upward
- * or downward trend for the observation. This means
+ * observations in the sample, \(\bf \alpha\) and \(\bf \beta\) are dampening
+ * factors between \(\bf 0.0\) and \(\bf 1.0\) responsible for smoothing out
+ * the observations, \(\bf y_t\) is the {@literal t-th} observation,
+ * \(\bf l_t\) its level estimate,, and \(\bf b_t\) is an estimate of the
+ * upward or downward trend for the observation. This means
  * </p>
  *
  * <p>
@@ -108,8 +108,7 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * and for forecasts \(h\) points beyond the available sample, it is calculated
- * as
+ * and a forecast \(h\) points beyond the available sample is calculated as
  * </p>
  *
  * <p>

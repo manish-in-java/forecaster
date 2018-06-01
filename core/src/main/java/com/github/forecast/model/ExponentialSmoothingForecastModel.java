@@ -14,8 +14,6 @@
 
 package com.github.forecast.model;
 
-import org.apache.commons.math3.fitting.leastsquares.LevenbergMarquardtOptimizer;
-import org.apache.commons.math3.optim.SimpleVectorValueChecker;
 import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
 
 /**
@@ -27,14 +25,11 @@ import org.apache.commons.math3.optim.nonlinear.scalar.GoalType;
  */
 abstract class ExponentialSmoothingForecastModel extends ForecastModel
 {
-  static final double                      DAMPENING_FACTOR_CONVERGENCE_THRESHOLD = 1e-6;
-  static final SimpleVectorValueChecker    DAMPENING_FACTOR_CONVERGENCE_CHECKER   = new SimpleVectorValueChecker(DAMPENING_FACTOR_CONVERGENCE_THRESHOLD,
-                                                                                                                 DAMPENING_FACTOR_CONVERGENCE_THRESHOLD);
-  static final double                      INITIAL_DAMPENING_FACTOR               = 0.5;
-  static final LevenbergMarquardtOptimizer LEAST_SQUARES_OPTIMIZER                = new LevenbergMarquardtOptimizer();
-  static final double                      MAX_DAMPENING_FACTOR                   = 1.0;
-  static final int                         MAX_OPTIMIZATION_EVALUATIONS           = 100;
-  static final int                         MAX_OPTIMIZATION_ITERATIONS            = 100;
-  static final double                      MIN_DAMPENING_FACTOR                   = 0.0;
-  static final GoalType                    OPTIMIZATION_GOAL                      = GoalType.MINIMIZE;
+  static final double   DAMPENING_FACTOR_CONVERGENCE_THRESHOLD = 1e-6;
+  static final double   INITIAL_DAMPENING_FACTOR               = 0.5;
+  static final double   MAX_DAMPENING_FACTOR                   = 1.0;
+  static final int      MAX_OPTIMIZATION_EVALUATIONS           = 100;
+  static final int      MAX_OPTIMIZATION_ITERATIONS            = 100;
+  static final double   MIN_DAMPENING_FACTOR                   = 0.0;
+  static final GoalType OPTIMIZATION_GOAL                      = GoalType.MINIMIZE;
 }
