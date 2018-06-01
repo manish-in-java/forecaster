@@ -37,7 +37,7 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(\large \boxed{l_t = \alpha{y_{t-1}} + (1 - \alpha)l_{t-1}}\)
+ * \(\large l_t = \alpha{y_{t-1}} + (1 - \alpha)l_{t-1}\)
  * <br>
  * </p>
  *
@@ -45,7 +45,7 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(\large \boxed{l_t = l_{t-1} + \alpha({y_{t-1}} - l_{t-1})}\)
+ * \(\large l_t = l_{t-1} + \alpha({y_{t-1}} - l_{t-1})\)
  * <br>
  * </p>
  *
@@ -95,7 +95,7 @@ import java.util.function.Function;
  *
  * <p>
  * <br>
- * \(\large \boxed{f_t = l_t}\)
+ * \(\large f_t = l_t\)
  * <br>
  * </p>
  *

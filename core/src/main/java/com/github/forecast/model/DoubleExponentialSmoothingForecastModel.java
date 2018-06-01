@@ -34,9 +34,12 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large \boxed{l_t = \alpha{y_t} + (1 - \alpha)(l_{t-1} + b_{t-1})}\), and
- * <br>
- * \(\large \boxed{b_t = \beta(l_t - l_{t-1}) + (1 - \beta)b_{t-1}}\)
+ * \(\large
+ * \begin{align}
+ * l_t &amp;= \alpha{y_t} + (1 - \alpha)(l_{t-1} + b_{t-1}) \tag*{level} \\
+ * b_t &amp;= \beta(l_t - l_{t-1}) + (1 - \beta)b_{t-1} \tag*{trend}
+ * \end{align}
+ * \)
  * </p>
  *
  * <p>
@@ -74,9 +77,9 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large \boxed{l_1 = y_1}\), and
+ * \(\large l_1 = y_1\), and
  * <br>
- * \(\large \boxed{b_1 = \frac{y_n - y_1}{n - 1}}\),
+ * \(\large b_1 = \frac{y_n - y_1}{n - 1}\),
  * <br><br>
  * where, \(\bf n\) is the number of observations in the sample, \(\bf y_1\)
  * is the first (chronologically oldest) observation, and \(\bf y_n\) is the
@@ -103,7 +106,7 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large \boxed{f_t = l_t + b_t}\)
+ * \(\large f_t = l_t + b_t\)
  * <br>
  * </p>
  *
@@ -113,7 +116,7 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large \boxed{f_{t+h} = l_t + h{b_t}}\)
+ * \(\large f_{t+h} = l_t + h{b_t} \tag*{forecast}\)
  * <br>
  * </p>
  *
