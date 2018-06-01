@@ -72,7 +72,8 @@
                   , labels        : options
                 }
                 , options         : {
-                  scales          : {
+                  animation       : { duration : 0 }
+                  , scales        : {
                     yAxes         : [{
                       ticks       : { beginAtZero : true }
                     }]

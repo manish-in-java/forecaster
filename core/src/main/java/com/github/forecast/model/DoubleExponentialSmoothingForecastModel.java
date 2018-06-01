@@ -15,7 +15,6 @@
 package com.github.forecast.model;
 
 import com.github.forecast.domain.Forecast;
-import org.apache.commons.math3.analysis.MultivariateVectorFunction;
 import org.apache.commons.math3.optim.InitialGuess;
 import org.apache.commons.math3.optim.MaxEval;
 import org.apache.commons.math3.optim.MaxIter;
@@ -28,8 +27,9 @@ import java.util.Arrays;
 /**
  * <p>
  * Generates forecast for a sample that contains upward and/or downward trends,
- * using double exponential smoothing, where an observation \(\bf O\) is
- * dampened exponentially to get a smooth version \(\bf S\) as
+ * using double exponential smoothing, where an observation \(\bf y_t\) is
+ * dampened exponentially to get a level estimate \(\bf l_t\) and a trend
+ * estimate \(\bf b_t\) as
  * </p>
  *
  * <p>
@@ -42,10 +42,10 @@ import java.util.Arrays;
  * <p>
  * where, \(\bf t\) is an index that ranges from {@literal 1} to the number of
  * observations in the sample, \(\bf y_t\) is the {@literal t-th} observation,
- * \(\bf l_t\) its smooth version, \(\bf \alpha\) and \(\bf \beta\) are
+ * \(\bf l_t\) its level estimate, \(\bf \alpha\) and \(\bf \beta\) are
  * dampening factors between \(\bf 0.0\) and \(\bf 1.0\) responsible for
  * smoothing out the observations, and \(\bf b_t\) is an estimate of the upward
- * or downward trend for the {@literal t-th} observation. This means
+ * or downward trend for the observation. This means
  * </p>
  *
  * <p>
@@ -96,6 +96,33 @@ import java.util.Arrays;
  * the sample as closely as possible.
  * </p>
  *
+ * <p>
+ * The forecast \(f_t\) corresponding to the observation \(y_t\) is calculated
+ * as
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large \boxed{f_t = l_t + b_t}\)
+ * <br>
+ * </p>
+ *
+ * <p>
+ * and for forecasts \(h\) points beyond the available sample, it is calculated
+ * as
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large \boxed{f_{t+h} = l_t + h{b_t}}\)
+ * <br>
+ * </p>
+ *
+ * <p>
+ * where, \(l_t\) is the last level estimate, and \(b_t\) is the last trend
+ * estimate.
+ * </p>
+ *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc433.htm">Double Exponential Smoothing</a>
  */
 public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothingForecastModel
@@ -114,17 +141,18 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
     final double alpha = optimalDampeningFactors[0], beta = optimalDampeningFactors[1];
 
     // Smoothen the observations using the optimal values for alpha and beta.
-    final double[][] processed = smoothenObservations(observations, alpha, beta);
-    final double[] smoothed = processed[0], trend = processed[1];
+    final double[][] smoothed = smoothenObservations(observations, alpha, beta);
+    final double[] forecast = smoothed[0], level = smoothed[1], trend = smoothed[2];
 
-    // Add the smooth observations as the predictions for the known
-    // observations.
-    final double[] predictions = Arrays.copyOf(smoothed, observations.length + projections);
+    final int samples = observations.length;
+
+    // Add the forecasts for the known observations.
+    final double[] predictions = Arrays.copyOf(forecast, samples + projections);
 
     // Add specified number of predictions beyond the sample.
     for (int i = 0; i < projections; ++i)
     {
-      predictions[observations.length + i] = smoothed[observations.length - 1] + (i + 1) * trend[observations.length - 1];
+      predictions[samples + i] = level[samples - 1] + (i + 1) * trend[samples - 1];
     }
 
     return forecast(observations, predictions);
@@ -181,24 +209,27 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
   }
 
   /**
-   * Gets the model function to use for optimizing the values of \(\alpha\)
-   * and \(\beta\), which is calculates the SSE for the given values of
-   * \(\alpha\) and \(\beta\).
+   * Calculates the SSE for specified observations and given values of
+   * \(\alpha\) and \(\beta\), so that the optimal values of the dampening
+   * factors can be determined iteratively.
    *
    * @param observations The observations for which optimal values of
    *                     \(\alpha\) and \(\beta\) are required.
-   * @return A {@link MultivariateVectorFunction}.
+   * @return An {@link ObjectiveFunction}.
    */
   private ObjectiveFunction optimizationModelFunction(final double[] observations)
   {
     return new ObjectiveFunction(params -> {
+      final int samples = observations.length;
+      final double alpha = params[0], beta = params[1];
+
       // Smoothen the observations.
-      final double[] smoothed = smoothenObservations(observations, params[0], params[1])[0];
+      final double[] forecast = smoothenObservations(observations, alpha, beta)[0];
 
       // Calculate SSE, starting with the first forecast (corresponding
       // with the second observation in the series).
       double sse = 0.0;
-      for (int i = 0; i < observations.length - 1; ++i)
+      for (int i = 0; i < samples - 1; ++i)
       {
         // The observations need to be compared to forecasts that are one
         // ahead. This is because the forecasts depend directly upon the
@@ -206,7 +237,7 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
         // corresponding forecasts, error will be minimized when alpha = 1.0.
         // This will automatically guide the optimizer to seek the value of
         // 1.0 for alpha, which would make the forecasts useless.
-        final double error = observations[i] - smoothed[i + 1];
+        final double error = observations[i] - forecast[i + 1];
 
         sse += error * error;
       }
@@ -222,22 +253,25 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
    * @param observations The observations to smoothen.
    * @param alpha        The dampening factor \(\alpha\).
    * @param beta         The dampening factor \(\beta\).
-   * @return A two-dimension array where the first dimension contains the
-   * smoothened observations, and the second dimension contains an estimate of
-   * the trend at each of the observed points.
+   * @return A three-dimension array where the first dimension contains the
+   * forecast, the second dimension contains level estimates for the
+   * observations, and the third dimension contains trend estimates.
    */
   private double[][] smoothenObservations(final double[] observations, final double alpha, final double beta)
   {
     // Determine the sample size.
     final int samples = observations.length;
 
-    final double[] level = new double[samples], trend = new double[samples];
+    final double[] forecast = new double[samples], level = new double[samples], trend = new double[samples];
 
     // Use the first observation as the first smooth observation.
     level[0] = observations[0];
 
     // Estimate the overall trend using the first and last observations.
     trend[0] = estimatedInitialTrend(observations);
+
+    // Set the value for the first prediction.
+    forecast[0] = level[0] + trend[0];
 
     // Generate the rest using the smoothing formula.
     for (int i = 1; i < samples; ++i)
@@ -246,8 +280,11 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
 
       // Update the trend.
       trend[i] = beta * (level[i] - level[i - 1]) + (1 - beta) * trend[i - 1];
+
+      // Generate the forecast.
+      forecast[i] = level[i] + trend[i];
     }
 
-    return new double[][] { level, trend };
+    return new double[][] { forecast, level, trend };
   }
 }
