@@ -29,9 +29,10 @@ import java.util.function.Function;
 
 /**
  * <p>
- * Generates forecast for a sample using exponential smoothing, where an
- * observation \(\bf y\) is dampened exponentially to get a smooth version
- * \(\bf l\) as
+ * Generates forecast for a sample using exponential smoothing, which is useful
+ * when the observed values simply fluctuate around an average value (called
+ * the <i>level</i>). An observation \(\bf y_t\) is dampened exponentially to
+ * get a smooth version \(\bf l_t\) as
  * </p>
  *
  * <p>
@@ -85,6 +86,17 @@ import java.util.function.Function;
  * find the optimal value of \(\alpha\) by minimizing the value of the
  * {@literal sum-squared-errors (SSE)} (also referred to as the
  * {@literal cost function} for the model).
+ * </p>
+ *
+ * <p>
+ * The forecast \(f_t\) corresponding to the observation \(y_t\) is the same
+ * as \(\l_t\), that is
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large \boxed{f_t = l_t}\)
+ * <br>
  * </p>
  *
  * <p>
@@ -218,10 +230,10 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    */
   double[] smoothenObservations(final double[] observations, final double alpha)
   {
-    final double[] smoothed = new double[observations.length];
+    final double[] level = new double[observations.length];
 
     // Generate the first smooth observation using a specific strategy.
-    smoothed[0] = firstPrediction(observations);
+    level[0] = firstPrediction(observations);
 
     // Prepare a baseline for the observations.
     final double[] baseline = baselineObservations(observations);
@@ -230,10 +242,10 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
     // values instead of the observations directly.
     for (int i = 1; i < observations.length; ++i)
     {
-      smoothed[i] = smoothed[i - 1] + alpha * (baseline[i] - smoothed[i - 1]);
+      level[i] = level[i - 1] + alpha * (baseline[i] - level[i - 1]);
     }
 
-    return smoothed;
+    return level;
   }
 
   /**
