@@ -21,13 +21,13 @@ import java.util.Arrays;
 /**
  * <p>
  * Generates forecast for a sample using exponential smoothing, where an
- * observation \(\bf y\) is dampened exponentially to get a smooth version
- * \(\bf l\) as
+ * observation \(\bf y_t\) is dampened exponentially to get a smooth version
+ * \(\bf l_t\) as
  * </p>
  *
  * <p>
  * <br>
- * \(\large \boxed{l_t = \alpha{y_t} + (1 - \alpha)l_{t-1}}\)
+ * \(\large l_t = \alpha{y_t} + (1 - \alpha)l_{t-1}\)
  * <br>
  * </p>
  *
@@ -35,7 +35,7 @@ import java.util.Arrays;
  *
  * <p>
  * <br>
- * \(\large \boxed{l_t = l_{t-1} + \alpha({y_t} - l_{t-1})}\)
+ * \(\large l_t = l_{t-1} + \alpha({y_t} - l_{t-1})\)
  * <br>
  * </p>
  *
@@ -62,9 +62,14 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * This variation, also known by its short form <i>EWMA</i> is characterized
- * by a direct dependence of \(l_t\) upon \(y_t\), and was originally proposed
- * in <i>1959</i> by <i>S.W. Roberts</i>.
+ * The forecast \(f_t\) corresponding to the observation \(y_t\) is the same
+ * as \(\l_t\), that is
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large f_t = l_t\)
+ * <br>
  * </p>
  *
  * <p>
@@ -79,11 +84,17 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * The initial value of \(\alpha\) must be between \(0.0\) and \(1.0\). The
- * closer the value is to \(0.0\), lesser the contribution of observations
- * farther in the past and higher that of most recent predictions. The closer
- * it is to \(1.0\), lesser the contribution of predictions and higher that
- * of the observations.
+ * The value of \(\alpha\) must be between \(0.0\) and \(1.0\). The closer the
+ * value is to \(0.0\), lesser the contribution of observations farther in the
+ * past and higher that of most recent predictions. The closer it is to
+ * \(1.0\), lesser the contribution of predictions and higher that of the
+ * observations.
+ * </p>
+ *
+ * <p>
+ * This variation, also known by its short form <i>EWMA</i> is characterized
+ * by a direct dependence of \(l_t\) upon \(y_t\), and was originally proposed
+ * in <i>1959</i> by <i>S.W. Roberts</i>.
  * </p>
  *
  * @see <a href="https://en.wikipedia.org/wiki/EWMA_chart">Exponential Weighted Moving Average</a>

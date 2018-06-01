@@ -28,8 +28,8 @@ abstract class ExponentialSmoothingForecastModel extends ForecastModel
   static final double   DAMPENING_FACTOR_CONVERGENCE_THRESHOLD = 1e-6;
   static final double   INITIAL_DAMPENING_FACTOR               = 0.5;
   static final double   MAX_DAMPENING_FACTOR                   = 1.0;
-  static final int      MAX_OPTIMIZATION_EVALUATIONS           = 100;
-  static final int      MAX_OPTIMIZATION_ITERATIONS            = 100;
+  static final int      MAX_OPTIMIZATION_EVALUATIONS           = 10000;
+  static final int      MAX_OPTIMIZATION_ITERATIONS            = 10000;
   static final double   MIN_DAMPENING_FACTOR                   = 0.0;
   static final GoalType OPTIMIZATION_GOAL                      = GoalType.MINIMIZE;
 }

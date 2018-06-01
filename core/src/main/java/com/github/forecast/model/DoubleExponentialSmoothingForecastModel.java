@@ -72,6 +72,32 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
+ * The forecast \(f_t\) corresponding to the observation \(y_t\) is calculated
+ * as
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large f_t = l_t + b_t\)
+ * <br>
+ * </p>
+ *
+ * <p>
+ * and a forecast \(h\) points beyond the available sample is calculated as
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large f_{t+h} = l_t + h{b_t} \tag*{forecast}\)
+ * <br>
+ * </p>
+ *
+ * <p>
+ * where, \(l_t\) is the last level estimate, and \(b_t\) is the last trend
+ * estimate.
+ * </p>
+ *
+ * <p>
  * The initial values are chosen as
  * </p>
  *
@@ -97,32 +123,6 @@ import java.util.Arrays;
  * The optimal values of \(\alpha\) and \(\beta\) are determined through an
  * iterative process for each sample, such that the forecast approximates
  * the sample as closely as possible.
- * </p>
- *
- * <p>
- * The forecast \(f_t\) corresponding to the observation \(y_t\) is calculated
- * as
- * </p>
- *
- * <p>
- * <br>
- * \(\large f_t = l_t + b_t\)
- * <br>
- * </p>
- *
- * <p>
- * and a forecast \(h\) points beyond the available sample is calculated as
- * </p>
- *
- * <p>
- * <br>
- * \(\large f_{t+h} = l_t + h{b_t} \tag*{forecast}\)
- * <br>
- * </p>
- *
- * <p>
- * where, \(l_t\) is the last level estimate, and \(b_t\) is the last trend
- * estimate.
  * </p>
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc433.htm">Double Exponential Smoothing</a>
@@ -276,15 +276,15 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
     forecast[0] = level[0] + trend[0];
 
     // Generate the rest using the smoothing formula.
-    for (int i = 1; i < samples; ++i)
+    for (int t = 1; t < samples; ++t)
     {
-      level[i] = alpha * observations[i] + (1 - alpha) * (level[i - 1] + trend[i - 1]);
+      level[t] = alpha * observations[t] + (1 - alpha) * (level[t - 1] + trend[t - 1]);
 
       // Update the trend.
-      trend[i] = beta * (level[i] - level[i - 1]) + (1 - beta) * trend[i - 1];
+      trend[t] = beta * (level[t] - level[t - 1]) + (1 - beta) * trend[t - 1];
 
       // Generate the forecast.
-      forecast[i] = level[i] + trend[i];
+      forecast[t] = level[t] + trend[t];
     }
 
     return new double[][] { forecast, level, trend };

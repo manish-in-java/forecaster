@@ -73,8 +73,14 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * This model, characterized by a dependence of \(l_t\) upon \(y_{t-1}\) was
- * originally proposed in <i>1986</i> by <i>J. Stuart Hunter</i>.
+ * The forecast \(f_t\) corresponding to the observation \(y_t\) is the same
+ * as \(\l_t\), that is
+ * </p>
+ *
+ * <p>
+ * <br>
+ * \(\large f_t = l_t\)
+ * <br>
  * </p>
  *
  * <p>
@@ -89,22 +95,16 @@ import java.util.function.Function;
  * </p>
  *
  * <p>
- * The forecast \(f_t\) corresponding to the observation \(y_t\) is the same
- * as \(\l_t\), that is
+ * The value of \(\alpha\) must be between \(0.0\) and \(1.0\). The closer the
+ * value is to \(0.0\), lesser the contribution of observations farther in the
+ * past and higher that of most recent predictions. The closer it is to
+ * \(1.0\), lesser the contribution of predictions and higher that of the
+ * observations.
  * </p>
  *
  * <p>
- * <br>
- * \(\large f_t = l_t\)
- * <br>
- * </p>
- *
- * <p>
- * The initial value of \(\alpha\) must be between \(0.0\) and \(1.0\). The
- * closer the value is to \(0.0\), lesser the contribution of observations
- * farther in the past and higher that of most recent predictions. The closer
- * it is to \(1.0\), lesser the contribution of predictions and higher that
- * of the observations.
+ * This model, characterized by a dependence of \(l_t\) upon \(y_{t-1}\) was
+ * originally proposed in <i>1986</i> by <i>J. Stuart Hunter</i>.
  * </p>
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc431.htm">Exponential Smoothing</a>
@@ -231,7 +231,10 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
    */
   double[] smoothenObservations(final double[] observations, final double alpha)
   {
-    final double[] level = new double[observations.length];
+    // Determine the sample size.
+    final int samples = observations.length;
+
+    final double[] level = new double[samples];
 
     // Generate the first smooth observation using a specific strategy.
     level[0] = firstPrediction(observations);
@@ -241,9 +244,9 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
 
     // Generate the rest using the smoothing formula and using the baseline
     // values instead of the observations directly.
-    for (int i = 1; i < observations.length; ++i)
+    for (int t = 1; t < samples; ++t)
     {
-      level[i] = level[i - 1] + alpha * (baseline[i] - level[i - 1]);
+      level[t] = level[t - 1] + alpha * (baseline[t] - level[t - 1]);
     }
 
     return level;
@@ -375,9 +378,9 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
       final double[] smoothed = smoothingFunction.apply(baseline, alpha);
 
       double sse = 0.0;
-      for (int i = 0; i < baseline.length - 1; ++i)
+      for (int t = 0; t < baseline.length - 1; ++t)
       {
-        final double error = baseline[i + 1] - smoothed[i];
+        final double error = baseline[t + 1] - smoothed[t];
 
         sse += error * error;
       }
