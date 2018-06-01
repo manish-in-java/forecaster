@@ -189,18 +189,19 @@ public class SingleExponentialSmoothingForecastModel extends ExponentialSmoothin
     // Smoothen the observations.
     final double[] smoothed = smoothenObservations(observations, optimalAlpha);
 
+    final int samples = observations.length;
+
     // Add the smooth observations as the predictions for the known
     // observations.
-    final double[] predictions = Arrays.copyOf(smoothed, observations.length + projections);
+    final double[] predictions = Arrays.copyOf(smoothed, samples + projections);
 
     // Add a prediction corresponding to the last observation.
-    predictions[observations.length] = optimalAlpha * observations[observations.length - 1]
-        + (1 - optimalAlpha) * predictions[observations.length - 1];
+    predictions[samples] = optimalAlpha * observations[samples - 1] + (1 - optimalAlpha) * predictions[samples - 1];
 
     // Add specified number of predictions beyond the sample.
     for (int j = 1; j < projections; ++j)
     {
-      predictions[observations.length + j] = predictions[observations.length];
+      predictions[samples + j] = predictions[samples];
     }
 
     return forecast(observations, predictions);
