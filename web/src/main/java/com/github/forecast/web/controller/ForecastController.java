@@ -18,7 +18,6 @@ import com.github.forecast.domain.Forecast;
 import com.github.forecast.domain.Sample;
 import com.github.forecast.model.*;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,11 +38,11 @@ public class ForecastController
    */
   @PostMapping
   @ResponseBody
-  public SampleAndForecast forecast(final ForecastModelEnum forecastingModel, final String sampleData, final Model model)
+  public SampleAndForecast forecast(final ForecastModelEnum forecastingModel, final String sampleData)
   {
     final Sample sample = getSample(sampleData);
 
-    return new SampleAndForecast(sample, forecastingModel.getModel().forecast(sample));
+    return new SampleAndForecast(sample, forecastingModel.getModel().forecast(sample, forecastingModel.getProjections()));
   }
 
   /**
@@ -79,7 +78,7 @@ public class ForecastController
    */
   private enum ForecastModelEnum
   {
-    DES(new DoubleExponentialSmoothingForecastModel()),
+    DES(new DoubleExponentialSmoothingForecastModel(), 4),
 
     EWMA(new ExponentialWeightedMovingAverageForecastModel()),
 
@@ -93,21 +92,22 @@ public class ForecastController
 
     STAV(new StraightAverageForecastModel()),
 
-    TES4A(new TripleExponentialSmoothingForecastModel(4, false)),
+    TES4A(new TripleExponentialSmoothingForecastModel(4, false), 4),
 
-    TES4M(new TripleExponentialSmoothingForecastModel(4, true)),
+    TES4M(new TripleExponentialSmoothingForecastModel(4, true), 4),
 
-    TES7A(new TripleExponentialSmoothingForecastModel(7, false)),
+    TES7A(new TripleExponentialSmoothingForecastModel(7, false), 7),
 
-    TES7M(new TripleExponentialSmoothingForecastModel(7, true)),
+    TES7M(new TripleExponentialSmoothingForecastModel(7, true), 7),
 
-    TES12A(new TripleExponentialSmoothingForecastModel(12, false)),
+    TES12A(new TripleExponentialSmoothingForecastModel(12, false), 12),
 
-    TES12M(new TripleExponentialSmoothingForecastModel(12, true)),
+    TES12M(new TripleExponentialSmoothingForecastModel(12, true), 12),
 
     WA(new WeightedAverageForecastModel(new double[] { 4, 3, 2, 1 }));
 
     private final ForecastModel model;
+    private final int           projections;
 
     /**
      * Sets the forecast model to use.
@@ -116,7 +116,20 @@ public class ForecastController
      */
     ForecastModelEnum(final ForecastModel model)
     {
+      this(model, 1);
+    }
+
+    /**
+     * Sets the forecast model to use and the number of projections to add
+     * to the forecast.
+     *
+     * @param model       A {@link ForecastModel}.
+     * @param projections The number of projections to add to the forecast.
+     */
+    ForecastModelEnum(final ForecastModel model, final int projections)
+    {
       this.model = model;
+      this.projections = projections;
     }
 
     /**
@@ -127,6 +140,16 @@ public class ForecastController
     ForecastModel getModel()
     {
       return model;
+    }
+
+    /**
+     * Gets the number of projections to make beyond the sample size.
+     *
+     * @return The number of projections to make beyond the sample size.
+     */
+    int getProjections()
+    {
+      return projections;
     }
   }
 

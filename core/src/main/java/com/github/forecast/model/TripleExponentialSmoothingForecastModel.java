@@ -260,16 +260,9 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
     final double[] optimalDampeningFactors = optimalDampeningFactors(observations);
     final double alpha = optimalDampeningFactors[0], beta = optimalDampeningFactors[1], gamma = optimalDampeningFactors[2];
 
-    System.out.println("Alpha = " + alpha + ", Beta = " + beta + ", Gamma = " + gamma);
-
     // Smoothen the observations using the optimal values for alpha, beta and gamma.
     final double[][] processed = smoothenObservations(observations, alpha, beta, gamma);
     final double[] forecast = processed[0], level = processed[1], seasonality = processed[3], trend = processed[2];
-
-    for (int t = 0; t < samples; ++t)
-    {
-      System.out.println(String.format("%4.6f    %4.6f    %4.6f    %4.6f    %4.6f", observations[t], level[t], trend[t], seasonality[t], forecast[t]));
-    }
 
     // Add the smooth observations as the predictions for the known
     // observations.
@@ -281,9 +274,11 @@ public class TripleExponentialSmoothingForecastModel extends ExponentialSmoothin
       // For predictions beyond the available sample, the baseline period
       // should be within the last season. Determine the baseline period
       // for the current prediction.
-      final int period = samples - periodsPerSeason + i % periodsPerSeason - 1;
+      final int period = samples - periodsPerSeason + i % periodsPerSeason;
 
-      predictions[samples + i] = level[samples - 1] + (i + 1) * trend[samples - 1] + seasonality[period];
+      predictions[samples + i] = multiplicative
+                                 ? (level[samples - 1] + (i + 1) * trend[samples - 1]) * seasonality[period]
+                                 : level[samples - 1] + (i + 1) * trend[samples - 1] + seasonality[period];
     }
 
     return forecast(observations, predictions);
