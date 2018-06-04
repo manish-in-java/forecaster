@@ -60,11 +60,6 @@ abstract class ExponentialSmoothingForecastModelTest extends ForecastModelTest
     assertNotNull(predictions);
     assertTrue(predictions.length > samples);
 
-    for (int i = 0; i < observations.length; ++i)
-    {
-      assertNotEquals(0.0, predictions[i]);
-    }
-
     // Ensure that the accuracy measures have been calculated.
     assertNotEquals(0.0, subject.getBias());
     assertNotEquals(0.0, subject.getMeanAbsoluteDeviation());

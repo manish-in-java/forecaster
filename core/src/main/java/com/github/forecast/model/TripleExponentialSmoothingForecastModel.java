@@ -85,7 +85,7 @@ import java.util.Arrays;
  * \begin{align}
  * l_t &amp;= \alpha\frac{y_t}{s_{t-m}} + (1 - \alpha)(l_{t-1} + b_{t-1}) \tag*{level} \\
  * b_t &amp;= \beta(l_t - l_{t-1}) + (1 - \beta)b_{t-1} \tag*{trend} \\
- * s_t &amp;= \gamma\frac{(y_t}{l_t} + (1 - \gamma)s_{t-m} \tag*{seasonality}
+ * s_t &amp;= \gamma\frac{y_t}{l_t} + (1 - \gamma)s_{t-m} \tag*{seasonality}
  * \end{align}
  * \)
  * </p>
@@ -183,13 +183,21 @@ import java.util.Arrays;
  * </p>
  *
  * <p>
- * The forecast \(f_t\) corresponding to the observation \(y_t\) is calculated
- * as
+ * This model is also known as <i>Holt-Winters model</i> after its inventors
+ * <i>C.C. Holt</i> and <i>Peter Winters</i> who proposed it in <i>1965</i>.
  * </p>
  *
  * <p>
- * This model is also known as <i>Holt-Winters model</i> after its inventors
- * <i>C.C. Holt</i> and <i>Peter Winters</i> who proposed it in <i>1965</i>.
+ * <b>Note</b>
+ * <br><br>
+ * The triple exponential smoothing model is implemented in many software
+ * packages. Many of these packages also optimize the smoothing parameters
+ * for a given set of observations. However, it is common to find that the
+ * optimal values of the smoothing parameters varies from one software
+ * package to another. This is mainly due to the choice of the initial
+ * estimates for level, trend and seasonal indices. Different estimates for
+ * these initial values inadvertently lead to different optimal values for
+ * the smoothing parameters.
  * </p>
  *
  * @see <a href="https://www.itl.nist.gov/div898/handbook/pmc/section4/pmc435.htm">Triple Exponential Smoothing</a>
