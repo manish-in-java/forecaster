@@ -43,14 +43,19 @@ block content
                     label Forecast model
                     select(id="forecastingModel", name="forecastingModel")
                       option(selected="selected", value="NAIVE") Naive
-                      option(value="STRAIGHT_AVERAGE") Straight Average
-                      option(value="SIMPLE_AVERAGE") Simple Average
-                      option(value="SINGLE_MOVING_AVERAGE") Moving Average [groups of 3]
-                      option(value="WEIGHTED_AVERAGE") Weighted Average [4, 3, 2, 1]
-                      option(value="SINGLE_EXPONENTIAL_SMOOTHING") Single Exponential Smoothing
-                      option(value="EXPONENTIAL_WEIGHTED_MOVING_AVERAGE") Exponential Weighted Moving Average (EWMA)
-                      option(value="DOUBLE_EXPONENTIAL_SMOOTHING") Double Exponential Smoothing
-                      option(value="TRIPLE_EXPONENTIAL_SMOOTHING") Triple Exponential Smoothing
+                      option(value="STAV") Straight Average
+                      option(value="SIAV") Simple Average
+                      option(value="SMA") Moving Average [groups of 3]
+                      option(value="WA") Weighted Average [4, 3, 2, 1]
+                      option(value="SES") Single Exponential Smoothing
+                      option(value="EWMA") Exponential Weighted Moving Average (EWMA)
+                      option(value="DES") Double Exponential Smoothing
+                      option(value="TES7A") Triple Exponential Smoothing (weekly, additive)
+                      option(value="TES7M") Triple Exponential Smoothing (weekly, multiplicative)
+                      option(value="TES4A") Triple Exponential Smoothing (quarterly, additive)
+                      option(value="TES4M") Triple Exponential Smoothing (quarterly, multiplicative)
+                      option(value="TES12A") Triple Exponential Smoothing (monthly, additive)
+                      option(value="TES12M") Triple Exponential Smoothing (monthly, multiplicative)
                   button.ui.blue.button(id="trigger", role="button", type="button", v-on:click="forecast") Plot
               .column
                 .ui.large.error.message(v-if="error")

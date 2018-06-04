@@ -79,23 +79,33 @@ public class ForecastController
    */
   private enum ForecastModelEnum
   {
-    DOUBLE_EXPONENTIAL_SMOOTHING(new DoubleExponentialSmoothingForecastModel()),
+    DES(new DoubleExponentialSmoothingForecastModel()),
 
-    EXPONENTIAL_WEIGHTED_MOVING_AVERAGE(new ExponentialWeightedMovingAverageForecastModel()),
+    EWMA(new ExponentialWeightedMovingAverageForecastModel()),
 
     NAIVE(new NaiveForecastModel()),
 
-    SIMPLE_AVERAGE(new SimpleAverageForecastModel()),
+    SIAV(new SimpleAverageForecastModel()),
 
-    SINGLE_EXPONENTIAL_SMOOTHING(new SingleExponentialSmoothingForecastModel()),
+    SES(new SingleExponentialSmoothingForecastModel()),
 
-    SINGLE_MOVING_AVERAGE(new SingleMovingAverageForecastModel(3)),
+    SMA(new SingleMovingAverageForecastModel(3)),
 
-    STRAIGHT_AVERAGE(new StraightAverageForecastModel()),
+    STAV(new StraightAverageForecastModel()),
 
-    TRIPLE_EXPONENTIAL_SMOOTHING(new TripleExponentialSmoothingForecastModel(4)),
+    TES4A(new TripleExponentialSmoothingForecastModel(4, false)),
 
-    WEIGHTED_AVERAGE(new WeightedAverageForecastModel(new double[] { 4, 3, 2, 1 }));
+    TES4M(new TripleExponentialSmoothingForecastModel(4, true)),
+
+    TES7A(new TripleExponentialSmoothingForecastModel(7, false)),
+
+    TES7M(new TripleExponentialSmoothingForecastModel(7, true)),
+
+    TES12A(new TripleExponentialSmoothingForecastModel(12, false)),
+
+    TES12M(new TripleExponentialSmoothingForecastModel(12, true)),
+
+    WA(new WeightedAverageForecastModel(new double[] { 4, 3, 2, 1 }));
 
     private final ForecastModel model;
 
