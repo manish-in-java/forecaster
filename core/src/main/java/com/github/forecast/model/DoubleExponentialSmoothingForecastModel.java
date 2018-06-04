@@ -228,18 +228,11 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
       // Smoothen the observations.
       final double[] forecast = smoothenObservations(observations, alpha, beta)[0];
 
-      // Calculate SSE, starting with the first forecast (corresponding
-      // with the second observation in the series).
+      // Calculate SSE.
       double sse = 0.0;
       for (int i = 0; i < samples - 1; ++i)
       {
-        // The observations need to be compared to forecasts that are one
-        // ahead. This is because the forecasts depend directly upon the
-        // observations, so, when observations are compared directly to the
-        // corresponding forecasts, error will be minimized when alpha = 1.0.
-        // This will automatically guide the optimizer to seek the value of
-        // 1.0 for alpha, which would make the forecasts useless.
-        final double error = observations[i] - forecast[i + 1];
+        final double error = observations[i] - forecast[i];
 
         sse += error * error;
       }
@@ -284,7 +277,7 @@ public class DoubleExponentialSmoothingForecastModel extends ExponentialSmoothin
       trend[t] = beta * (level[t] - level[t - 1]) + (1 - beta) * trend[t - 1];
 
       // Generate the forecast.
-      forecast[t] = level[t] + trend[t];
+      forecast[t] = level[t - 1] + trend[t - 1];
     }
 
     return new double[][] { forecast, level, trend };
