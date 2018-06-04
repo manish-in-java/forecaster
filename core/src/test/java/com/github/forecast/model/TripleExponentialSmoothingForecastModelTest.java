@@ -15,6 +15,7 @@
 package com.github.forecast.model;
 
 import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  * Unit tests for {@link TripleExponentialSmoothingForecastModel}.
@@ -34,6 +35,38 @@ public class TripleExponentialSmoothingForecastModelTest extends ExponentialSmoo
   }
 
   /**
+   * Tests that the triple exponential smoothing model cannot be constructed
+   * without specifying a natural number of periods per season.
+   */
+  @Test(expected = IllegalArgumentException.class)
+  public void testConstructWithNegativePeriod()
+  {
+    new TripleExponentialSmoothingForecastModel(-1, false);
+  }
+
+  /**
+   * Tests that the triple exponential smoothing model cannot be used to
+   * generate a forecast if the number of observations provided to it is not
+   * a whole number multiple of the number of periods per season.
+   */
+  @Test(expected = IllegalArgumentException.class)
+  public void testForecastWithoutFullSeason()
+  {
+    getForecastModel().forecast(getSample(2 * PERIODS + 1), getProjectionCount());
+  }
+
+  /**
+   * Tests that the triple exponential smoothing model cannot be used to
+   * generate a forecast if the number of observations provided to it is
+   * not adequate to cover at least two seasons.
+   */
+  @Test(expected = IllegalArgumentException.class)
+  public void testForecastWithoutTwoSeasons()
+  {
+    getForecastModel().forecast(getSample(PERIODS), getProjectionCount());
+  }
+
+  /**
    * {@inheritDoc}
    */
   @Override
@@ -46,8 +79,8 @@ public class TripleExponentialSmoothingForecastModelTest extends ExponentialSmoo
    * {@inheritDoc}
    */
   @Override
-  int getSampleCount()
+  int getSampleSize()
   {
-    return PERIODS * getInt(2, 5);
+    return PERIODS * getInt(3, 5);
   }
 }

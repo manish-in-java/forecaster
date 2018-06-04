@@ -33,22 +33,16 @@ abstract class AverageForecastModelTest extends ForecastModelTest
   @Test
   public void testForecast()
   {
-    // Generate a sample of random values.
-    final int samples = getSampleCount();
-    final double[] observations = new double[samples];
-
-    for (int i = 0; i < samples; ++i)
-    {
-      observations[i] = getDouble();
-    }
+    // Generate a random sample of observations.
+    final Sample sample = getSample();
 
     // Generate a forecast for the sample.
-    final Forecast subject = getForecastModel().forecast(new Sample(observations), getProjectionCount());
+    final Forecast subject = getForecastModel().forecast(sample, getProjectionCount());
     final double[] predictions = subject.getPredictions();
 
     assertNotNull(subject);
     assertNotNull(predictions);
-    assertTrue(predictions.length > samples);
+    assertTrue(predictions.length > sample.size());
 
     for (final double prediction : predictions)
     {

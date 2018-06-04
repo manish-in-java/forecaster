@@ -69,4 +69,14 @@ public class Sample
   {
     return Arrays.copyOf(observations, observations.length);
   }
+
+  /**
+   * Gets the number of observations in the sample.
+   *
+   * @return The number of observations in the sample.
+   */
+  public int size()
+  {
+    return observations.length;
+  }
 }

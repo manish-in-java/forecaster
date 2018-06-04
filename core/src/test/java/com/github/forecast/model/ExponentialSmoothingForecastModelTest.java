@@ -43,22 +43,16 @@ abstract class ExponentialSmoothingForecastModelTest extends ForecastModelTest
    */
   final void testForecast(final ForecastModel model)
   {
-    // Generate a sample of random values.
-    final int samples = getSampleCount();
-    final double[] observations = new double[samples];
-
-    for (int i = 0; i < samples; ++i)
-    {
-      observations[i] = getDouble();
-    }
+    // Generate a random sample of observations.
+    final Sample sample = getSample();
 
     // Generate a forecast for the sample.
-    final Forecast subject = model.forecast(new Sample(observations), getProjectionCount());
+    final Forecast subject = model.forecast(sample, getProjectionCount());
     final double[] predictions = subject.getPredictions();
 
     assertNotNull(subject);
     assertNotNull(predictions);
-    assertTrue(predictions.length > samples);
+    assertTrue(predictions.length > sample.size());
 
     // Ensure that the accuracy measures have been calculated.
     assertNotEquals(0.0, subject.getBias());

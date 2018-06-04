@@ -15,6 +15,7 @@
 package com.github.forecast.model;
 
 import com.github.UnitTest;
+import com.github.forecast.domain.Sample;
 import org.junit.Test;
 
 import static org.junit.Assert.assertNull;
@@ -46,13 +47,42 @@ abstract class ForecastModelTest implements UnitTest
   }
 
   /**
+   * Gets a sample of randomly generated observations.
+   *
+   * @return A {@link Sample}.
+   */
+  final Sample getSample()
+  {
+    return getSample(getSampleSize());
+  }
+
+  /**
+   * Gets a sample of specified number of randomly generated observations.
+   *
+   * @param samples The number of observations in the sample to generate.
+   * @return A {@link Sample}.
+   */
+  final Sample getSample(final int samples)
+  {
+    // Generate random observations for the sample.
+    final double[] observations = new double[samples];
+
+    for (int i = 0; i < samples; ++i)
+    {
+      observations[i] = getDouble();
+    }
+
+    return new Sample(observations);
+  }
+
+  /**
    * Gets the number of observations to include in each sample to be passed
    * to the model under test.
    *
    * @return The number of observations to include in each sample to be passed
    * to the model under test.
    */
-  int getSampleCount()
+  int getSampleSize()
   {
     return getInt(11, 20);
   }
