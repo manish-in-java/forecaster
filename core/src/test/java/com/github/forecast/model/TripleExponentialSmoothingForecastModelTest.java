@@ -30,7 +30,7 @@ public class TripleExponentialSmoothingForecastModelTest extends ExponentialSmoo
   @BeforeClass
   public static void setup()
   {
-    MODEL = new TripleExponentialSmoothingForecastModel(PERIODS);
+    MODEL = new TripleExponentialSmoothingForecastModel(PERIODS, false);
   }
 
   /**
