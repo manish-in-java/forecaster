@@ -26,9 +26,9 @@ import java.util.Arrays;
 
 /**
  * <p>
- * Generates forecast for a sample that contains upward and/or downward trends,
- * using double exponential smoothing, where an observation \(\bf y_t\) is
- * dampened exponentially to get a level estimate \(\bf l_t\) and a trend
+ * Generates forecast for a sample that contains an upward and/or downward
+ * trend, using double exponential smoothing, where an observation \(\bf y_t\)
+ * is dampened exponentially to get a level estimate \(\bf l_t\) and a trend
  * estimate \(\bf b_t\) as
  * </p>
  *

@@ -74,7 +74,7 @@ import java.util.function.Function;
  *
  * <p>
  * The forecast \(f_t\) corresponding to the observation \(y_t\) is the same
- * as \(\l_t\), that is
+ * as \(l_t\), that is
  * </p>
  *
  * <p>
@@ -86,7 +86,7 @@ import java.util.function.Function;
  * <p>
  * Smoothing utilizes a dampening factor \(\alpha\), that continually decreases
  * the effect of observations farther in the past. The model starts with an
- * initial value of \(\alpha\) (which is usually guessed) but determines
+ * initial value of \(\alpha\) (which is usually guessed), and then determines
  * the optimal value for the factor that approximates the sample as closely as
  * possible, through an iterative process. The iterative process attempts to
  * find the optimal value of \(\alpha\) by minimizing the value of the

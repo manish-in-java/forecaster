@@ -27,7 +27,7 @@ import java.util.Arrays;
 /**
  * <p>
  * Generates forecast for a sample that shows seasonality (periodicity) in
- * addition to upward and/or downward trends, using triple exponential
+ * addition to an upward and/or downward trend, using triple exponential
  * smoothing, where an observation \(\bf y_t\) is dampened exponentially to
  * get a level estimate \(\bf l_t\), a trend estimate \(\bf b_t\) and a
  * seasonality estimate \(\bf s_t\) as
@@ -193,10 +193,10 @@ import java.util.Arrays;
  * The triple exponential smoothing model is implemented in many software
  * packages. Many of these packages also optimize the smoothing parameters
  * for a given set of observations. However, it is common to find that the
- * optimal values of the smoothing parameters varies from one software
+ * optimal values of the smoothing parameters vary from one software
  * package to another. This is mainly due to the choice of the initial
  * estimates for level, trend and seasonal indices. Different estimates for
- * these initial values inadvertently lead to different optimal values for
+ * the initial values inadvertently lead to different optimal values for
  * the smoothing parameters.
  * </p>
  *

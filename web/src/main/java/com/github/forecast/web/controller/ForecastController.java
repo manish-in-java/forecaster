@@ -35,6 +35,12 @@ public class ForecastController
   /**
    * Generates a forecast based on sample data and choice of a forecasting
    * model.
+   *
+   * @param forecastingModel The model to use for generating the forecast.
+   * @param sampleData       The sample data as a comma-separated
+   *                         {@link String}.
+   * @return A {@link SampleAndForecast} containing the provided sample data
+   * and its associated forecast.
    */
   @PostMapping
   @ResponseBody
@@ -47,6 +53,8 @@ public class ForecastController
 
   /**
    * Displays the Forecast page.
+   *
+   * @return The view name for the Forecast page.
    */
   @GetMapping
   public String show()
